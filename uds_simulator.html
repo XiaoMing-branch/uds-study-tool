@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UDS 通信模拟器 — ISO 14229-1</title>
+<style>
+:root {
+  --bg: #0f1119; --card: #1a1d2e; --card2: #222740;
+  --text: #e2e8f0; --text2: #8892b0; --text3: #5a6380;
+  --border: #2a2f45; --primary: #3b82f6; --primary-glow: rgba(59,130,246,.25);
+  --success: #10b981; --danger: #ef4444; --warning: #f59e0b;
+  --req-bg: #1e293b; --res-bg: #0f2937; --neg-bg: #2d1520;
+  --req-color: #60a5fa; --res-color: #34d399; --neg-color: #f87171;
+  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+/* Layout */
+.app { display: grid; grid-template-columns: 300px 1fr 340px;
+  grid-template-rows: auto 1fr auto; height: 100vh; gap: 0; }
+.header { grid-column: 1/-1; display: flex; align-items: center; justify-content: space-between;
+  padding: .6rem 1.2rem; background: var(--card); border-bottom: 1px solid var(--border); }
+.header h1 { font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+.header h1 .badge { font-size: .6rem; background: var(--primary); padding: 2px 8px;
+  border-radius: 10px; color: #fff; font-weight: 400; }
+.header-actions { display: flex; gap: 8px; align-items: center; }
+.btn { padding: .4rem 1rem; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--card); color: var(--text); font-size: .8rem; cursor: pointer;
+  transition: all .15s; display: inline-flex; align-items: center; gap: 6px; }
+.btn:hover { background: var(--card2); border-color: var(--primary); }
+.btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+.btn-primary:hover { filter: brightness(1.15); }
+.btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+.btn-sm { padding: .25rem .6rem; font-size: .75rem; }
+
+/* ECU Panel */
+.ecu-panel { background: var(--card); border-right: 1px solid var(--border);
+  overflow-y: auto; padding: 1rem; }
+.ecu-panel h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--text3); margin-bottom: .8rem; }
+.ecu-section { margin-bottom: 1.2rem; }
+.ecu-section h3 { font-size: .75rem; color: var(--text2); margin-bottom: .5rem;
+  display: flex; align-items: center; gap: 6px; }
+.status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.status-item { background: var(--card2); border-radius: 6px; padding: .4rem .6rem; }
+.status-item .label { font-size: .65rem; color: var(--text3); text-transform: uppercase; }
+.status-item .value { font-size: .85rem; font-weight: 600; margin-top: 2px; font-family: var(--font-mono); }
+.status-item .value.ok { color: var(--success); }
+.status-item .value.warn { color: var(--warning); }
+.status-item .value.err { color: var(--danger); }
+.status-item .value.info { color: var(--primary); }
+.status-led { display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  margin-right: 4px; }
+.status-led.green { background: var(--success); box-shadow: 0 0 6px var(--success); }
+.status-led.red { background: var(--danger); box-shadow: 0 0 6px var(--danger); }
+.status-led.yellow { background: var(--warning); box-shadow: 0 0 6px var(--warning); }
+.status-led.blue { background: var(--primary); box-shadow: 0 0 6px var(--primary); }
+.status-led.off { background: var(--text3); }
+
+/* Message Log */
+.log-panel { display: flex; flex-direction: column; overflow: hidden;
+  background: var(--bg); }
+.log-header { display: flex; align-items: center; justify-content: space-between;
+  padding: .5rem 1rem; background: var(--card); border-bottom: 1px solid var(--border); }
+.log-header h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--text3); }
+.log-header .count { font-size: .75rem; color: var(--text2); }
+.log-container { flex: 1; overflow-y: auto; padding: .5rem; }
+.log-container::-webkit-scrollbar { width: 6px; }
+.log-container::-webkit-scrollbar-track { background: transparent; }
+.log-container::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+.msg-entry { display: flex; gap: 10px; padding: .5rem .6rem; border-radius: 6px;
+  margin-bottom: 4px; animation: fadeIn .2s ease; font-size: .82rem;
+  transition: background .15s; }
+.msg-entry:hover { background: var(--card2); }
+.msg-entry .time { font-family: var(--font-mono); font-size: .7rem; color: var(--text3);
+  min-width: 60px; padding-top: 2px; }
+.msg-entry .direction { font-size: .8rem; min-width: 40px; text-align: center;
+  font-weight: 700; }
+.msg-entry .direction.req { color: var(--req-color); }
+.msg-entry .direction.res { color: var(--res-color); }
+.msg-entry .direction.neg { color: var(--neg-color); }
+.msg-entry .content { flex: 1; min-width: 0; }
+.msg-entry .bytes { font-family: var(--font-mono); font-size: .82rem;
+  word-break: break-all; }
+.msg-entry .desc { font-size: .73rem; color: var(--text2); margin-top: 2px; }
+.msg-entry .bytes.req { color: var(--req-color); }
+.msg-entry .bytes.res { color: var(--res-color); }
+.msg-entry .bytes.neg { color: var(--neg-color); }
+.msg-entry .arrow { color: var(--text3); margin: 0 4px; }
+.msg-entry.req { border-left: 3px solid var(--req-color); }
+.msg-entry.res { border-left: 3px solid var(--res-color); }
+.msg-entry.neg { border-left: 3px solid var(--neg-color); }
+
+/* Composer */
+.composer-panel { background: var(--card); border-left: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow: hidden; }
+.composer-header { padding: .6rem 1rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between; }
+.composer-header h2 { font-size: .8rem; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--text3); }
+.composer-body { flex: 1; overflow-y: auto; padding: 1rem; }
+.form-group { margin-bottom: .8rem; }
+.form-group label { display: block; font-size: .75rem; color: var(--text2);
+  margin-bottom: 4px; font-weight: 500; }
+.form-group select, .form-group input { width: 100%; padding: .5rem .7rem;
+  border: 1px solid var(--border); border-radius: 6px; background: var(--card2);
+  color: var(--text); font-size: .82rem; font-family: var(--font-mono);
+  transition: border .15s; }
+.form-group select:focus, .form-group input:focus { outline: none; border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-glow); }
+.form-group select option { background: var(--card); }
+
+.quick-btns { display: flex; flex-wrap: wrap; gap: 4px; margin: .5rem 0; }
+.quick-btns .btn { font-size: .7rem; padding: .25rem .5rem; }
+
+/* Preview */
+.preview-section { margin-top: .8rem; }
+.preview-section h3 { font-size: .7rem; color: var(--text3); text-transform: uppercase;
+  letter-spacing: .5px; margin-bottom: 4px; }
+.preview-bytes { background: var(--card2); border-radius: 6px; padding: .6rem .8rem;
+  font-family: var(--font-mono); font-size: .9rem; min-height: 32px;
+  word-break: break-all; }
+.preview-bytes .byte { display: inline-block; padding: 2px 6px; margin: 1px;
+  border-radius: 3px; }
+.preview-bytes .byte.sid { background: rgba(59,130,246,.3); color: var(--primary); }
+.preview-bytes .byte.sf { background: rgba(245,158,11,.3); color: var(--warning); }
+.preview-bytes .byte.data { background: rgba(16,185,129,.2); color: var(--success); }
+.preview-bytes .byte.nrc { background: rgba(239,68,68,.3); color: var(--danger); }
+
+/* Decoded info */
+.decoded-info { margin-top: .5rem; padding: .6rem .8rem; border-radius: 6px;
+  background: var(--card2); font-size: .78rem; line-height: 1.6; }
+.decoded-info .row { display: flex; gap: 6px; }
+.decoded-info .tag { color: var(--text3); min-width: 70px; }
+
+/* Hex raw input */
+.hex-raw { margin: .5rem 0; }
+.hex-raw input { font-family: var(--font-mono); font-size: .9rem; letter-spacing: 1px; }
+
+/* Scenarios */
+.scenario-list { display: flex; flex-direction: column; gap: 4px; }
+.scenario-item { padding: .5rem .7rem; border-radius: 6px; background: var(--card2);
+  cursor: pointer; transition: all .15s; font-size: .78rem; }
+.scenario-item:hover { background: var(--primary); color: #fff; }
+.scenario-item .sc-name { font-weight: 500; }
+.scenario-item .sc-desc { font-size: .7rem; color: var(--text3); margin-top: 1px; }
+.scenario-item:hover .sc-desc { color: rgba(255,255,255,.7); }
+
+/* Empty state */
+.empty-state { display: flex; flex-direction: column; align-items: center;
+  justify-content: center; height: 100%; color: var(--text3); text-align: center; }
+.empty-state .icon { font-size: 3rem; margin-bottom: 1rem; opacity: .5; }
+.empty-state p { font-size: .85rem; }
+.empty-state .hint { font-size: .75rem; margin-top: .5rem; }
+
+/* Animations */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
+.sending { animation: pulse .5s ease; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* Toast */
+.toast { position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%);
+  background: var(--card); border: 1px solid var(--border); padding: .6rem 1.2rem;
+  border-radius: 8px; font-size: .8rem; z-index: 100;
+  box-shadow: 0 4px 20px rgba(0,0,0,.4); animation: fadeIn .3s ease; }
+.toast.error { border-color: var(--danger); }
+.toast.success { border-color: var(--success); }
+
+/* Responsive */
+@media (max-width: 1000px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; }
+  .ecu-panel, .composer-panel { display: none; }
+  .show-ecu .ecu-panel { display: block; }
+  .show-composer .composer-panel { display: block; }
+}
+
+/* Decode panel toggle */
+.decode-toggle { font-size: .7rem; color: var(--primary); cursor: pointer;
+  margin-top: 4px; display: inline-block; }
+.decode-toggle:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="app" id="app">
+  <!-- Header -->
+  <header class="header">
+    <h1>🔌 UDS Simulator <span class="badge">ISO 14229-1:2020</span></h1>
+    <div class="header-actions">
+      <button class="btn btn-sm" onclick="clearLog()">🗑️ 清空日志</button>
+      <button class="btn btn-sm" onclick="resetECU()">🔄 重置 ECU</button>
+      <button class="btn btn-sm btn-primary" onclick="toggleAutoTP()" id="btn-tp">⏱️ 自动 TP: 关</button>
+    </div>
+  </header>
+
+  <!-- ECU Panel -->
+  <aside class="ecu-panel">
+    <h2>🔋 ECU 状态</h2>
+    
+    <div class="ecu-section">
+      <div class="status-grid">
+        <div class="status-item"><div class="label">会话</div><div class="value info" id="ecu-session">Default</div></div>
+        <div class="status-item"><div class="label">安全等级</div><div class="value warn" id="ecu-security">🔒 Locked</div></div>
+        <div class="status-item"><div class="label">P2 (ms)</div><div class="value" id="ecu-p2">50</div></div>
+        <div class="status-item"><div class="label">P2* (ms)</div><div class="value" id="ecu-p2star">2000</div></div>
+        <div class="status-item"><div class="label">S3 (ms)</div><div class="value" id="ecu-s3">5000</div></div>
+        <div class="status-item"><div class="label">响应模式</div><div class="value ok" id="ecu-comm">Normal</div></div>
+      </div>
+    </div>
+
+    <div class="ecu-section">
+      <h3>📊 计数器</h3>
+      <div class="status-grid">
+        <div class="status-item"><div class="label">已收消息</div><div class="value" id="ecu-rx">0</div></div>
+        <div class="status-item"><div class="label">已发消息</div><div class="value" id="ecu-tx">0</div></div>
+        <div class="status-item"><div class="label">正响应</div><div class="value ok" id="ecu-pos">0</div></div>
+        <div class="status-item"><div class="label">负响应</div><div class="value err" id="ecu-neg">0</div></div>
+      </div>
+    </div>
+
+    <div class="ecu-section">
+      <h3>📋 场景快速执行</h3>
+      <div class="scenario-list">
+        <div class="scenario-item" onclick="runScenario('session-default')">
+          <div class="sc-name">🔵 进入默认会话</div>
+          <div class="sc-desc">10 01 → defaultSession</div>
+        </div>
+        <div class="scenario-item" onclick="runScenario('session-extended')">
+          <div class="sc-name">🟡 进入扩展会话</div>
+          <div class="sc-desc">10 03 → extendedDiagnosticSession</div>
+        </div>
+        <div class="scenario-item" onclick="runScenario('session-programming')">
+          <div class="sc-name">🔴 进入编程会话</div>
+          <div class="sc-desc">10 02 → programmingSession</div>
+        </div>
+        <div class="scenario-item" onclick="runScenario('tester-present')">
+          <div class="sc-name">💓 TesterPresent</div>
+          <div class="sc-desc">3E 00 → 保持会话活跃</div>
+        </div>
+        <div class="scenario-item" onclick="runScenario('read-vin')">
+          <div class="sc-name">🔍 读取 VIN (DID F190)</div>
+          <div class="sc-desc">22 F1 90 → VIN 码</div>
+        </div>
+        <div class="scenario-item" onclick="runScenario('read-dtc-status')">
+          <div class="sc-name">⚠️ 读取 DTC 状态</div>
+          <div class="sc-desc">19 02 → 按状态报告 DTC</div>
+        </div>
+        <div class="scenario-item" onclick="runScenario('security-access')">
+          <div class="sc-name">🔐 SecurityAccess (种子→密钥)</div>
+          <div class="sc-desc">27 01 → 请求种子 → 27 02 发送密钥</div>
+        </div>
+        <div class="scenario-item" onclick="runScenario('ecu-reset')">
+          <div class="sc-name">🔄 ECU 硬复位</div>
+          <div class="sc-desc">11 01 → hardReset</div>
+        </div>
+        <div class="scenario-item" onclick="runScenario('full-diag-flow')">
+          <div class="sc-name">📋 完整诊断流程演示</div>
+          <div class="sc-desc">扩展会话 → 安全解锁 → 读取 → 编程...</div>
+        </div>
+        <div class="scenario-item" onclick="runScenario('clear-dtc')">
+          <div class="sc-name">🧹 清除 DTC</div>
+          <div class="sc-desc">14 FF FF FF → 清除所有故障码</div>
+        </div>
+        <div class="scenario-item" onclick="runScenario('read-multi-did')">
+          <div class="sc-name">📊 批量读取 DID</div>
+          <div class="sc-desc">22 F1 90 F1 92 F1 93 → 多 DID 请求</div>
+        </div>
+        <div class="scenario-item" onclick="runScenario('routine-checksum')">
+          <div class="sc-name">🔧 启动校验例程</div>
+          <div class="sc-desc">31 01 FF 02 → 启动 Checksum 例程</div>
+        </div>
+        <div class="scenario-item" onclick="runScenario('download-flow')">
+          <div class="sc-name">📥 下载流程演示</div>
+          <div class="sc-desc">34 → 36 → 37 完整下载序列</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ecu-section">
+      <h3>💾 DID 值 (模拟)</h3>
+      <div class="status-grid">
+        <div class="status-item"><div class="label">F190 (VIN)</div><div class="value" style="font-size:.65rem" id="did-F190">LSVAB4BR7N1234567</div></div>
+        <div class="status-item"><div class="label">F191 (硬件号)</div><div class="value" style="font-size:.65rem" id="did-F191">HW-2024-REV-B</div></div>
+        <div class="status-item"><div class="label">F192 (软件号)</div><div class="value" style="font-size:.65rem" id="did-F192">SW-3.2.1-Build42</div></div>
+        <div class="status-item"><div class="label">F193 (ECU 名称)</div><div class="value" style="font-size:.65rem" id="did-F193">BOSCH_ECU_v2</div></div>
+        <div class="status-item"><div class="label">F194 (水温)</div><div class="value" style="font-size:.65rem" id="did-F194">--</div></div>
+        <div class="status-item"><div class="label">F195 (转速)</div><div class="value" style="font-size:.65rem" id="did-F195">--</div></div>
+        <div class="status-item"><div class="label">F196 (车速)</div><div class="value" style="font-size:.65rem" id="did-F196">--</div></div>
+        <div class="status-item"><div class="label">F19A (环境温度)</div><div class="value" style="font-size:.65rem" id="did-F19A">--</div></div>
+        <div class="status-item"><div class="label">F199 (供电电压)</div><div class="value" style="font-size:.65rem" id="did-F199">--</div></div>
+        <div class="status-item"><div class="label">F197 (里程)</div><div class="value" style="font-size:.65rem" id="did-F197">--</div></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Message Log Panel -->
+  <main class="log-panel" id="log-panel">
+    <div class="log-header">
+      <h2>📝 消息日志</h2>
+      <span class="count" id="msg-count">0 条消息</span>
+    </div>
+    <div class="log-container" id="log-container">
+      <div class="empty-state" id="empty-state">
+        <div class="icon">📡</div>
+        <p>等待诊断消息...</p>
+        <div class="hint">使用右侧构造器发送 UDS 请求，或点击左侧场景快速体验</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Composer Panel -->
+  <aside class="composer-panel">
+    <div class="composer-header">
+      <h2>📤 消息构造器</h2>
+    </div>
+    <div class="composer-body">
+      <div class="form-group">
+        <label>服务 (SID)</label>
+        <select id="composer-sid" onchange="onComposerChange()"></select>
+      </div>
+      <div class="form-group" id="sf-group" style="display:none">
+        <label>子功能</label>
+        <select id="composer-sf" onchange="onComposerChange()"></select>
+      </div>
+      <div class="form-group">
+        <label>数据字节 (HEX, 空格分隔)</label>
+        <input type="text" id="composer-data" placeholder="例如: F1 90" value="" oninput="onComposerChange()">
+      </div>
+      
+      <div class="quick-btns" id="composer-dids" style="display:none">
+        <span style="font-size:.7rem;color:var(--text3);width:100%">常用 DID:</span>
+        <button class="btn btn-sm" onclick="setData('F1 90')">F190 VIN</button>
+        <button class="btn btn-sm" onclick="setData('F1 91')">F191 硬件号</button>
+        <button class="btn btn-sm" onclick="setData('F1 92')">F192 软件号</button>
+        <button class="btn btn-sm" onclick="setData('F1 93')">F193 ECU名</button>
+        <button class="btn btn-sm" onclick="setData('F1 94')">F194 水温</button>
+        <button class="btn btn-sm" onclick="setData('F1 95')">F195 转速</button>
+        <button class="btn btn-sm" onclick="setData('F1 96')">F196 车速</button>
+        <button class="btn btn-sm" onclick="setData('F1 97')">F197 里程</button>
+        <button class="btn btn-sm" onclick="setData('F1 99')">F199 电压</button>
+        <button class="btn btn-sm" onclick="setData('F1 9A')">F19A 环境温</button>
+        <button class="btn btn-sm" onclick="setData('F1 9C')">F19C 油量</button>
+      </div>
+
+      <div class="preview-section">
+        <h3>请求预览</h3>
+        <div class="preview-bytes" id="preview-req"><span class="byte sid">??</span></div>
+      </div>
+
+      <div class="preview-section">
+        <h3>预期响应</h3>
+        <div class="preview-bytes" id="preview-res"><span class="byte data">等待构建...</span></div>
+      </div>
+
+      <div class="decoded-info" id="decoded-info">
+        <div class="row"><span class="tag">解码:</span><span id="decode-text">选择服务以查看解码信息</span></div>
+      </div>
+
+      <div style="margin-top:1rem;display:flex;gap:8px">
+        <button class="btn btn-primary" onclick="sendMessage()" style="flex:1;justify-content:center;padding:.6rem">
+          📤 发送请求
+        </button>
+        <button class="btn" onclick="setData('')">清除</button>
+      </div>
+
+      <div class="form-group" style="margin-top:1rem">
+        <label>原始 HEX 发送</label>
+        <input type="text" class="hex-raw" id="hex-raw" placeholder="10 01" oninput="onRawHex()">
+        <button class="btn btn-sm" onclick="sendRawHex()" style="margin-top:4px">📤 发送原始 HEX</button>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script>
+// ======================== ECU STATE ========================
+const ECU = {
+  session: 0x01,          // 0x01=default, 0x02=programming, 0x03=extended
+  sessionName: 'Default',
+  securityLevel: 0,       // 0=locked
+  securityAttempts: 0,
+  securityThreshold: 3,   // max attempts before lockout
+  securitySeed: null,
+  securityUnlockLevel: 0,
+  P2: 50,                 // ms
+  P2star: 2000,           // ms
+  S3: 0,                  // ms (0 = no timeout in default session)
+  communication: true,    // Rx enabled
+  dtcSetting: true,       // DTC setting enabled
+  dtcStatus: [0x00, 0x00, 0x00], // 3-byte DTC status byte
+  // Upload/Download state tracking
+  uploadSession: false,
+  transferSequence: 0,
+  blockSequenceCounter: 0,
+  // Simulated DIDs - expanded
+  dids: {
+    'F190': 'LSVAB4BR7N1234567'.split('').map(c => c.charCodeAt(0)),
+    'F191': 'HW-2024-REV-B'.split('').map(c => c.charCodeAt(0)),
+    'F192': 'SW-3.2.1-Build42'.split('').map(c => c.charCodeAt(0)),
+    'F193': 'BOSCH_ECU_v2'.split('').map(c => c.charCodeAt(0)),
+    'F194': [0x00, 0x64],  // Engine coolant temp: 100°C (signed: -40+100=60)
+    'F195': [0x0E, 0x10],  // Engine speed: 3600 RPM
+    'F196': [0x2A, 0xF8],  // Vehicle speed: 110.0 km/h (scaled: 0x2AF8/100)
+    'F197': [0x0D, 0xAC],  // Odometer: 3500 km
+    'F198': [0x41, 0x42, 0x43, 0x44], // Active diagnostic codes: "ABCD"
+    'F199': [0x00, 0x00, 0x0F, 0xA0], // ECU supply voltage: 4000mV (4.000V)
+    'F19A': [0x00, 0x84],  // Ambient temp: 21°C (0x84 as signed = -124... wait, wrong. Let's use 0x15 = 21)
+    'F19B': [0x00, 0x00, 0x00, 0x64], // Total runtime: 100h
+    'F19C': [0x00, 0x00],  // Fuel level: 75%
+    'F300': [0x01],         // VIN-specific DID example
+    'F301': [0x00, 0x01],   // Boot software version
+    'F302': [0x00, 0x02],   // Application software version
+  },
+  didLabels: {
+    'F190': 'VIN 码', 'F191': '硬件版本号', 'F192': '软件版本号',
+    'F193': 'ECU 名称', 'F194': '发动机冷却液温度', 'F195': '发动机转速',
+    'F196': '车速', 'F197': '里程表', 'F198': '诊断代码',
+    'F199': 'ECU 供电电压', 'F19A': '环境温度', 'F19B': '总运行时间',
+    'F19C': '燃油液位', 'F300': 'VIN 特定数据', 'F301': 'Boot 软件版本',
+    'F302': '应用软件版本',
+  },
+  // Simulated DTCs
+  dtcs: [
+    { id: 'P0101', high: 0x01, middle: 0x01, low: 0x01, status: 0x29, severity: 0x50 },
+    { id: 'P0113', high: 0x01, middle: 0x04, low: 0x4A, status: 0x0D, severity: 0x50 },
+    { id: 'P0300', high: 0x01, middle: 0x0C, low: 0x10, status: 0x09, severity: 0x20 },
+  ],
+  counters: { rx: 0, tx: 0, pos: 0, neg: 0 },
+  securityTimers: { lastAttempt: 0, delayMs: 10000 },
+  autoTP: false,
+  tpTimer: null,
+  sessionTimer: null,
+  p2Timer: null,
+};
+
+// ======================== SERVICE DATA ========================
+const SID_INFO = {
+  0x10: { name: 'DiagnosticSessionControl', short: 'DSC', unit: 'diagnostic-communication',
+    hasSF: true, reqSID: '10', resSID: '50',
+    sfs: {
+      '01': 'defaultSession', '02': 'programmingSession', '03': 'extendedDiagnosticSession'
+    } },
+  0x11: { name: 'ECUReset', short: 'ER', unit: 'diagnostic-communication',
+    hasSF: true, reqSID: '11', resSID: '51',
+    sfs: { '01': 'hardReset', '02': 'keyOffOnReset', '03': 'softReset', '04': 'enableRapidPowerShutdown' } },
+  0x14: { name: 'ClearDiagnosticInformation', short: 'CDI', unit: 'stored-data',
+    hasSF: false, reqSID: '14', resSID: '54' },
+  0x19: { name: 'ReadDTCInformation', short: 'RDTCI', unit: 'stored-data',
+    hasSF: true, reqSID: '19', resSID: '59',
+    sfs: { '01': 'reportNumberOfDTCByStatusMask', '02': 'reportDTCByStatusMask',
+      '03': 'reportDTCSnapshotIdentification', '04': 'reportDTCSnapshotRecordByDTCNumber',
+      '05': 'reportDTCStoredDataByRecordNumber', '06': 'reportDTCExtDataRecordByDTCNumber',
+      '0A': 'reportSupportedDTC', '0B': 'reportFirstTestFailedDTC',
+      '0C': 'reportFirstConfirmedDTC', '0D': 'reportMostRecentTestFailedDTC',
+      '0E': 'reportMostRecentConfirmedDTC', '0F': 'reportMostRecentAllDTC' } },
+  0x22: { name: 'ReadDataByIdentifier', short: 'RDBI', unit: 'data-transmission',
+    hasSF: false, reqSID: '22', resSID: '62' },
+  0x23: { name: 'ReadMemoryByAddress', short: 'RMBA', unit: 'data-transmission',
+    hasSF: false, reqSID: '23', resSID: '63' },
+  0x24: { name: 'ReadScalingDataByIdentifier', short: 'RSDBI', unit: 'data-transmission',
+    hasSF: false, reqSID: '24', resSID: '64' },
+  0x27: { name: 'SecurityAccess', short: 'SA', unit: 'diagnostic-communication',
+    hasSF: true, reqSID: '27', resSID: '67',
+    sfs: { '01': 'requestSeed (level 1)', '02': 'sendKey (level 1)',
+      '03': 'requestSeed (level 2)', '04': 'sendKey (level 2)' } },
+  0x28: { name: 'CommunicationControl', short: 'CC', unit: 'diagnostic-communication',
+    hasSF: true, reqSID: '28', resSID: '68',
+    sfs: { '00': 'enableRxAndTx', '01': 'enableRxAndDisableTx',
+      '02': 'disableRxAndEnableTx', '03': 'disableRxAndTx' } },
+  0x2A: { name: 'ReadDataByPeriodicIdentifier', short: 'RDBPI', unit: 'data-transmission',
+    hasSF: false, reqSID: '2A', resSID: '6A' },
+  0x2C: { name: 'DynamicallyDefineDataIdentifier', short: 'DDDI', unit: 'data-transmission',
+    hasSF: true, reqSID: '2C', resSID: '6C',
+    sfs: { '01': 'defineByIdentifier', '02': 'defineByMemoryAddress',
+      '03': 'clearDynamicallyDefinedDataIdentifier' } },
+  0x28: { name: 'CommunicationControl', short: 'CC', unit: 'diagnostic-communication',
+    hasSF: true, reqSID: '28', resSID: '68',
+    sfs: { '00': 'enableRxAndTx', '01': 'enableRxAndDisableTx',
+      '02': 'disableRxAndEnableTx', '03': 'disableRxAndTx' } },
+  0x2E: { name: 'WriteDataByIdentifier', short: 'WDBI', unit: 'data-transmission',
+    hasSF: false, reqSID: '2E', resSID: '6E' },
+  0x2F: { name: 'InputOutputControlByIdentifier', short: 'IOCBI', unit: 'io-control',
+    hasSF: true, reqSID: '2F', resSID: '6F',
+    sfs: { '00': 'returnControlToECU', '01': 'resetToDefault',
+      '02': 'freezeCurrentState', '03': 'shortTermAdjustment' } },
+  0x31: { name: 'RoutineControl', short: 'RC', unit: 'routine',
+    hasSF: true, reqSID: '31', resSID: '71',
+    sfs: { '01': 'startRoutine', '02': 'stopRoutine', '03': 'requestRoutineResults' } },
+  0x34: { name: 'RequestDownload', short: 'RD', unit: 'upload-download',
+    hasSF: false, reqSID: '34', resSID: '74' },
+  0x35: { name: 'RequestUpload', short: 'RU', unit: 'upload-download',
+    hasSF: false, reqSID: '35', resSID: '75' },
+  0x36: { name: 'TransferData', short: 'TD', unit: 'upload-download',
+    hasSF: false, reqSID: '36', resSID: '76' },
+  0x37: { name: 'RequestTransferExit', short: 'RTE', unit: 'upload-download',
+    hasSF: false, reqSID: '37', resSID: '77' },
+  0x38: { name: 'RequestFileTransfer', short: 'RFT', unit: 'upload-download',
+    hasSF: true, reqSID: '38', resSID: '78',
+    sfs: { '01': 'addFile', '02': 'deleteFile', '03': 'replaceFile',
+      '04': 'readFile', '05': 'readDirectory' } },
+  0x3D: { name: 'WriteMemoryByAddress', short: 'WMBA', unit: 'data-transmission',
+    hasSF: false, reqSID: '3D', resSID: '7D' },
+  0x3E: { name: 'TesterPresent', short: 'TP', unit: 'diagnostic-communication',
+    hasSF: true, reqSID: '3E', resSID: '7E',
+    sfs: { '00': 'zeroSubFunction', '80': 'zeroSubFunction (suppressResponse)' } },
+  0x85: { name: 'ControlDTCSetting', short: 'CDTCS', unit: 'diagnostic-communication',
+    hasSF: true, reqSID: '85', resSID: 'C5',
+    sfs: { '01': 'on', '02': 'off' } },
+  0x86: { name: 'ResponseOnEvent', short: 'ROE', unit: 'diagnostic-communication',
+    hasSF: true, reqSID: '86', resSID: 'C6',
+    sfs: { '00': 'stopResponseOnEvent', '01': 'onDTCStatusChange',
+      '02': 'onTimerInterrupt', '03': 'onChangeOfDataIdentifier' } },
+  0x87: { name: 'LinkControl', short: 'LC', unit: 'diagnostic-communication',
+    hasSF: true, reqSID: '87', resSID: 'C7',
+    sfs: { '01': 'verifyBaudrateTransitionWithFixedBaudrate',
+      '02': 'verifyBaudrateTransitionWithSpecificBaudrate', '03': 'transitionBaudrate' } },
+};
+
+const NRC = {
+  GR: 0x10, SNS: 0x11, SFNS: 0x12, IMLOIF: 0x13, RTL: 0x14,
+  BRR: 0x21, CNC: 0x22, RSE: 0x24, NRFSC: 0x25, FPEORA: 0x26,
+  ROOR: 0x31, SAD: 0x33, AR: 0x34, IK: 0x35, ENOA: 0x36, RTDNE: 0x37,
+  UDNA: 0x70, TDS: 0x71, GPF: 0x72, WBSC: 0x73, RCRRP: 0x78,
+  SFNSIAS: 0x7E, SNSIAS: 0x7F
+};
+
+const NRC_NAMES = {};
+for (const [k, v] of Object.entries(NRC)) NRC_NAMES[v] = k;
+
+// Session info
+const SESSION_NAMES = { 0x01: 'Default', 0x02: 'Programming', 0x03: 'Extended' };
+
+// Comprehensive session permission matrix: which SIDs are allowed in each session
+// 0 = not available, 1 = available, 2 = available but requires security unlocked
+const SESSION_RULES = {
+  // Diagnostic & Communication Management
+  0x10: { 0x01: 1, 0x02: 1, 0x03: 1, desc: 'DiagnosticSessionControl' },
+  0x11: { 0x01: 1, 0x02: 1, 0x03: 1, desc: 'ECUReset' },
+  0x27: { 0x01: 0, 0x02: 1, 0x03: 1, desc: 'SecurityAccess (need non-default session)' },
+  0x28: { 0x01: 0, 0x02: 1, 0x03: 1, desc: 'CommunicationControl' },
+  0x3E: { 0x01: 1, 0x02: 1, 0x03: 1, desc: 'TesterPresent' },
+  0x85: { 0x01: 0, 0x02: 1, 0x03: 1, desc: 'ControlDTCSetting' },
+  0x86: { 0x01: 1, 0x02: 1, 0x03: 1, desc: 'ResponseOnEvent' },
+  0x87: { 0x01: 0, 0x02: 1, 0x03: 1, desc: 'LinkControl' },
+  // Data Transmission
+  0x22: { 0x01: 1, 0x02: 1, 0x03: 1, desc: 'ReadDataByIdentifier' },
+  0x23: { 0x01: 0, 0x02: 1, 0x03: 1, desc: 'ReadMemoryByAddress' },
+  0x24: { 0x01: 0, 0x02: 1, 0x03: 1, desc: 'ReadScalingDataByIdentifier' },
+  0x2A: { 0x01: 0, 0x02: 1, 0x03: 1, desc: 'ReadDataByPeriodicIdentifier' },
+  0x2C: { 0x01: 0, 0x02: 1, 0x03: 1, desc: 'DynamicallyDefineDataIdentifier' },
+  0x2E: { 0x01: 2, 0x02: 2, 0x03: 2, desc: 'WriteDataByIdentifier (needs security)' },
+  0x3D: { 0x01: 0, 0x02: 2, 0x03: 2, desc: 'WriteMemoryByAddress (needs security)' },
+  // Stored Data Transmission
+  0x14: { 0x01: 0, 0x02: 2, 0x03: 2, desc: 'ClearDiagnosticInformation' },
+  0x19: { 0x01: 1, 0x02: 1, 0x03: 1, desc: 'ReadDTCInformation' },
+  // InputOutput Control
+  0x2F: { 0x01: 0, 0x02: 1, 0x03: 1, desc: 'InputOutputControlByIdentifier' },
+  // Routine
+  0x31: { 0x01: 0, 0x02: 2, 0x03: 2, desc: 'RoutineControl (needs security for erase/program)' },
+  // Upload Download
+  0x34: { 0x01: 0, 0x02: 1, 0x03: 0, desc: 'RequestDownload (programming only)' },
+  0x35: { 0x01: 0, 0x02: 1, 0x03: 0, desc: 'RequestUpload (programming only)' },
+  0x36: { 0x01: 0, 0x02: 1, 0x03: 0, desc: 'TransferData (programming only)' },
+  0x37: { 0x01: 0, 0x02: 1, 0x03: 0, desc: 'RequestTransferExit (programming only)' },
+  0x38: { 0x01: 0, 0x02: 1, 0x03: 0, desc: 'RequestFileTransfer (programming only)' },
+  // Security sub-layer
+  0x84: { 0x01: 0, 0x02: 1, 0x03: 1, desc: 'SecuredDataTransmission' },
+};
+
+// Build SESSION_SERVICES lookup for backward compatibility
+const SESSION_SERVICES = {};
+for (const ses of [0x01, 0x02, 0x03]) {
+  SESSION_SERVICES[ses] = [];
+  for (const [sid, rules] of Object.entries(SESSION_RULES)) {
+    if (rules[ses] && rules[ses] > 0) SESSION_SERVICES[ses].push(parseInt(sid));
+  }
+}
+
+// ======================== UI INIT ========================
+function initComposer() {
+  const sel = document.getElementById('composer-sid');
+  const sorted = Object.entries(SID_INFO).sort((a,b) => a[0]-b[0]);
+  for (const [sid, info] of sorted) {
+    const opt = document.createElement('option');
+    opt.value = sid;
+    opt.textContent = `0x${info.reqSID} ${info.name} (${info.short})`;
+    sel.appendChild(opt);
+  }
+  onComposerChange();
+}
+
+let _lastSid = null;
+
+function onComposerChange() {
+  const sid = parseInt(document.getElementById('composer-sid').value);
+  const info = SID_INFO[sid];
+  const sfGroup = document.getElementById('sf-group');
+  const sfSel = document.getElementById('composer-sf');
+  const didBtns = document.getElementById('composer-dids');
+
+  // Only rebuild SF options when SID actually changes
+  if (info && info.hasSF && info.sfs) {
+    sfGroup.style.display = 'block';
+    if (sid !== _lastSid) {
+      const prevVal = sfSel.value; // Save current selection
+      sfSel.innerHTML = '<option value="">无子功能</option>';
+      for (const [val, name] of Object.entries(info.sfs)) {
+        const opt = document.createElement('option');
+        opt.value = val;
+        opt.textContent = `0x${val} - ${name}`;
+        sfSel.appendChild(opt);
+      }
+      // Restore previous selection if still valid, else pick first real option
+      if ([...sfSel.options].some(o => o.value === prevVal && prevVal !== '')) {
+        sfSel.value = prevVal;
+      }
+    }
+  } else {
+    sfGroup.style.display = 'none';
+  }
+  _lastSid = sid;
+
+  // Show DID quick buttons for RDBI and WDBI
+  didBtns.style.display = (sid === 0x22 || sid === 0x2E) ? 'flex' : 'none';
+
+  updatePreview();
+}
+
+function setData(data) {
+  document.getElementById('composer-data').value = data;
+  onComposerChange();
+}
+
+function updatePreview() {
+  const sid = parseInt(document.getElementById('composer-sid').value);
+  const info = SID_INFO[sid];
+  if (!info) return;
+
+  const reqBytes = [parseInt(info.reqSID, 16)];
+  const sfVal = document.getElementById('composer-sf')?.value;
+  if (sfVal) reqBytes.push(parseInt(sfVal, 16));
+
+  const dataStr = document.getElementById('composer-data').value.trim();
+  if (dataStr) {
+    for (const p of dataStr.split(/[\s,]+/)) {
+      if (/^[0-9a-fA-F]{2}$/.test(p)) reqBytes.push(parseInt(p, 16));
+    }
+  }
+
+  // Update request preview
+  const preq = document.getElementById('preview-req');
+  preq.innerHTML = reqBytes.map((b, i) => {
+    let cls = 'byte';
+    if (i === 0) cls += ' sid';
+    else if (i === 1 && sfVal) cls += ' sf';
+    else cls += ' data';
+    return `<span class="${cls}">${b.toString(16).toUpperCase().padStart(2,'0')}</span>`;
+  }).join(' ');
+
+  // Update response preview
+  const resSID = parseInt(info.reqSID, 16) + 0x40;
+  const resBytes = [resSID];
+  if (sfVal) resBytes.push(parseInt(sfVal, 16));
+  const pres = document.getElementById('preview-res');
+  pres.innerHTML = resBytes.map((b, i) => {
+    let cls = 'byte';
+    if (i === 0) cls += ' sid';
+    else cls += ' data';
+    return `<span class="${cls}">${b.toString(16).toUpperCase().padStart(2,'0')}</span>`;
+  }).join(' ') + '<br><span class="byte nrc">7F</span> <span class="byte nrc">' + info.reqSID + '</span> <span class="byte nrc">NRC</span> (负响应)';
+
+  // Update decode
+  updateDecode(sid, sfVal, reqBytes);
+}
+
+function updateDecode(sid, sfVal, reqBytes) {
+  const el = document.getElementById('decode-text');
+  const info = SID_INFO[sid];
+  if (!info) { el.textContent = '选择服务以查看解码信息'; return; }
+
+  // Check session permission
+  const rules = SESSION_RULES[sid];
+  let permStr = '';
+  if (rules) {
+    const sesNames = { 0x01: 'Default', 0x02: 'Programming', 0x03: 'Extended' };
+    const accessStr = [];
+    for (const [ses, acc] of Object.entries(rules)) {
+      if (ses === 'desc') continue;
+      const s = sesNames[ses] || ses;
+      if (acc === 0) accessStr.push(`${s}❌`);
+      else if (acc === 1) accessStr.push(`${s}✅`);
+      else accessStr.push(`${s}🔒`);
+    }
+    permStr = `权限: ${accessStr.join(' | ')}`;
+  }
+
+  let lines = [];
+  lines.push(`📌 ${info.name} (0x${info.reqSID})`);
+  lines.push(`类别: ${info.unit}`);
+  if (permStr) lines.push(permStr);
+
+  if (sfVal) {
+    const sfName = info.sfs?.[sfVal] || '未知子功能';
+    const suppress = (parseInt(sfVal, 16) & 0x80) ? '⏭️ 抑制正响应' : '✅ 正常响应';
+    lines.push(`子功能: 0x${sfVal} = ${sfName} [${suppress}]`);
+  }
+
+  const dataBytes = reqBytes.slice(sfVal ? 2 : 1);
+  if (dataBytes.length > 0) {
+    const dataHex = dataBytes.map(b => b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
+    lines.push(`数据 (${dataBytes.length}B): ${dataHex}`);
+
+    // Enhanced DID decode
+    if (sid === 0x22 || sid === 0x2E) {
+      const did = dataBytes.slice(0, 2);
+      if (did.length === 2) {
+        const didHex = did.map(b => b.toString(16).toUpperCase().padStart(2,'0')).join('');
+        const didName = ECU.didLabels[didHex] || '⚠️ 未知 DID';
+        lines.push(`📍 DID: 0x${didHex} = ${didName}`);
+        // Decode known DIDs
+        if (ECU.dids[didHex]) {
+          const vals = ECU.dids[didHex];
+          if (vals.every(v => v >= 0x20 && v <= 0x7E)) {
+            lines.push(`📝 值: "${String.fromCharCode(...vals)}"`);
+          } else {
+            const raw = vals.map(b => b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
+            lines.push(`🔢 HEX: ${raw}`);
+            // Try to decode common formats
+            if (didHex === 'F194' && vals.length >= 2) {
+              const temp = vals[1] - 40;
+              lines.push(`🌡️ 温度: ${temp}°C`);
+            } else if (didHex === 'F195' && vals.length >= 2) {
+              const rpm = (vals[0] << 8) | vals[1];
+              lines.push(`⚡ 转速: ${rpm} RPM`);
+            } else if (didHex === 'F196' && vals.length >= 2) {
+              const speed = ((vals[0] << 8) | vals[1]) / 100;
+              lines.push(`🚗 车速: ${speed.toFixed(1)} km/h`);
+            } else if (didHex === 'F199' && vals.length >= 4) {
+              const mv = (vals[2] << 8) | vals[3];
+              lines.push(`🔋 电压: ${(mv/1000).toFixed(3)}V`);
+            } else if (didHex === 'F19C' && vals.length >= 2) {
+              lines.push(`⛽ 油量: ${vals[1]}%`);
+            }
+          }
+        }
+      }
+    }
+
+    // Decode DTC info
+    if (sid === 0x19 && sfVal) {
+      const subfuncs = {
+        '01': '按状态掩码报告 DTC 数量',
+        '02': '按状态掩码报告 DTC',
+        '0A': '报告支持的 DTC'
+      };
+      if (subfuncs[sfVal] && dataBytes.length >= 1) {
+        lines.push(`📊 ${subfuncs[sfVal]}, mask=0x${dataBytes[0].toString(16).padStart(2,'0')}`);
+      }
+    }
+
+    // Decode routine control
+    if (sid === 0x31 && dataBytes.length >= 2) {
+      const rid = (dataBytes[0] << 8) | dataBytes[1];
+      const rNames = { 0xFF00: 'Erase Memory', 0xFF01: 'Programming', 0xFF02: 'Checksum' };
+      lines.push(`🔧 例程 ID: 0x${rid.toString(16).padStart(4,'0')} = ${rNames[rid] || '自定义'}`);
+    }
+
+    // Decode download
+    if (sid === 0x34 && dataBytes.length >= 2) {
+      const alfi = dataBytes[1];
+      const addrBytes = alfi & 0x0F;
+      const lenBytes = (alfi >> 4) & 0x0F;
+      lines.push(`📥 下载: 地址格式=${addrBytes}B, 长度格式=${lenBytes}B`);
+    }
+
+    // Decode routine type
+    if (sid === 0x31) {
+      const sfName = info.sfs?.[sfVal] || '';
+      lines.push(`🔧 ${sfName}`);
+    }
+  }
+
+  // Response SID info
+  const resSID = parseInt(info.reqSID, 16) + 0x40;
+  lines.push(`✅ 正响应: 0x${resSID.toString(16).padStart(2,'0')} | ❌ 负响应: 0x7F + 0x${info.reqSID} + NRC`);
+
+  el.innerHTML = lines.join('<br>');
+}
+
+// ======================== ECU ENGINE ========================
+function checkSessionSecurity(reqSID, sf) {
+  const rules = SESSION_RULES[reqSID];
+  if (!rules) return { ok: false, nrc: NRC.SNS };
+  const access = rules[ECU.session];
+  if (!access || access === 0) return { ok: false, nrc: NRC.SNSIAS };
+  if (access === 2 && ECU.securityLevel === 0) return { ok: false, nrc: NRC.SAD };
+  return { ok: true };
+}
+
+function processRequest(bytes) {
+  ECU.counters.rx++;
+  if (bytes.length < 1) return negResp(0, NRC.IMLOIF);
+
+  const reqSID = bytes[0];
+  const info = SID_INFO[reqSID];
+
+  // Special case: SecurityAccess (0x27) is callable from non-default sessions even though it's level-2
+  // because it's the service that GRANTS security. DSC is always allowed.
+  const bypassSecurity = (reqSID === 0x27 || reqSID === 0x10 || reqSID === 0x3E);
+
+  if (!info) return negResp(reqSID, NRC.SNS);
+
+  // Session + Security permission check
+  if (!bypassSecurity) {
+    const perm = checkSessionSecurity(reqSID);
+    if (!perm.ok) {
+      // Distinguish between SNSIAS and SAD for better diagnostics
+      if (perm.nrc === NRC.SAD) {
+        return negResp(reqSID, NRC.SAD, 'securityAccessDenied — 需要在非默认会话中解锁安全访问');
+      }
+      return negResp(reqSID, perm.nrc);
+    }
+  }
+
+  const hasSF = info.hasSF && info.sfs;
+  let sf = null;
+  let data = bytes.slice(1);
+  let suppressResponse = false;
+
+  if (hasSF) {
+    if (data.length < 1) return negResp(reqSID, NRC.IMLOIF);
+    sf = data[0] & 0x7F;
+    suppressResponse = !!(data[0] & 0x80);
+    data = data.slice(1);
+
+    // Validate subfunction
+    const sfHex = sf.toString(16).toUpperCase().padStart(2,'0');
+    const sfKeys = Object.keys(info.sfs);
+    if (!sfKeys.includes(sfHex) && !sfKeys.includes(sf.toString(16).toUpperCase().padStart(2,'0'))) {
+      return negResp(reqSID, NRC.SFNS);
+    }
+  }
+
+  // Check communication state
+  if (!ECU.communication && reqSID !== 0x28 && reqSID !== 0x3E) {
+    return negResp(reqSID, NRC.CNC, 'conditionsNotCorrect — 通信已禁用');
+  }
+
+  // Route to handler
+  const res = handleService(reqSID, sf, data, bytes, suppressResponse);
+  if (res) ECU.counters.tx++;
+
+  // Update session timer
+  if (ECU.sessionTimer) clearTimeout(ECU.sessionTimer);
+  if (ECU.session !== 0x01) {
+    ECU.sessionTimer = setTimeout(() => {
+      ECU.session = 0x01;
+      ECU.sessionName = 'Default';
+      ECU.securityLevel = 0;
+      updateECUStatus();
+      addLogEntry([], `⏰ 会话超时 → 返回 Default 会话`, 'system');
+    }, ECU.S3);
+  }
+
+  return res;
+}
+
+function handleService(sid, sf, data, fullReq, suppressResponse) {
+  switch (sid) {
+    case 0x10: return handleDSC(sf, data, fullReq, suppressResponse);
+    case 0x11: return handleECUReset(sf, data, suppressResponse);
+    case 0x14: return handleClearDTC(sf, data, suppressResponse);
+    case 0x19: return handleReadDTCInfo(sf, data, suppressResponse);
+    case 0x22: return handleReadDID(data, fullReq, suppressResponse);
+    case 0x23: return handleReadMemory(data, suppressResponse);
+    case 0x24: return handleReadScaling(data, suppressResponse);
+    case 0x27: return handleSecurityAccess(sf, data, fullReq, suppressResponse);
+    case 0x28: return handleCommControl(sf, data, suppressResponse);
+    case 0x2A: return handleReadByPeriodicID(data, suppressResponse);
+    case 0x2C: return handleDynamicDefineDID(sf, data, suppressResponse);
+    case 0x2E: return handleWriteDID(data, fullReq, suppressResponse);
+    case 0x2F: return handleIOControl(sf, data, suppressResponse);
+    case 0x31: return handleRoutine(sf, data, suppressResponse);
+    case 0x34: return handleRequestDownload(sf, data, suppressResponse);
+    case 0x35: return handleRequestUpload(sf, data, suppressResponse);
+    case 0x36: return handleTransferData(sf, data, suppressResponse);
+    case 0x37: return handleTransferExit(sf, data, suppressResponse);
+    case 0x38: return handleFileTransfer(sf, data, suppressResponse);
+    case 0x3D: return handleWriteMemory(data, suppressResponse);
+    case 0x3E: return handleTesterPresent(sf, fullReq, suppressResponse);
+    case 0x85: return handleDTCSetting(sf, data, suppressResponse);
+    case 0x86: return handleResponseOnEvent(sf, data, suppressResponse);
+    case 0x87: return handleLinkControl(sf, data, suppressResponse);
+    default: return negResp(sid, NRC.SNSIAS);
+  }
+}
+
+// ---- Service Handlers ----
+
+function handleDSC(sf, data, fullReq, suppress) {
+  if (!sf) return negResp(0x10, NRC.IMLOIF);
+  const sessionTypes = { 0x01: 'Default', 0x02: 'Programming', 0x03: 'Extended' };
+  if (!(sf in sessionTypes)) return negResp(0x10, NRC.ROOR);
+
+  const oldSession = ECU.session;
+  ECU.session = sf;
+  ECU.sessionName = sessionTypes[sf];
+  ECU.securityLevel = 0; // Reset security on session change
+
+  // Update P2 timers based on session
+  if (sf === 0x01) { ECU.P2 = 50; ECU.P2star = 2000; ECU.S3 = 0; }
+  else if (sf === 0x02) { ECU.P2 = 50; ECU.P2star = 5000; ECU.S3 = 5000; }
+  else if (sf === 0x03) { ECU.P2 = 50; ECU.P2star = 2000; ECU.S3 = 5000; }
+
+  updateECUStatus();
+  if (suppress && (fullReq[1] & 0x80)) return null;
+
+  const resSID = 0x50;
+  const p2hex = [(ECU.P2 >> 8) & 0xFF, ECU.P2 & 0xFF];
+  const p2starhex = [(ECU.P2star >> 8) & 0xFF, ECU.P2star & 0xFF];
+  return { sid: resSID, payload: [sf, ...p2hex, ...p2starhex], desc: `会话: ${ECU.sessionName} (P2=${ECU.P2}ms, P2*=${ECU.P2star}ms)` };
+}
+
+function handleECUReset(sf, data, suppress) {
+  if (!sf) return negResp(0x11, NRC.IMLOIF);
+  const validTypes = [0x01, 0x02, 0x03, 0x04, 0x05];
+  if (!validTypes.includes(sf)) return negResp(0x11, NRC.ROOR);
+
+  const resetNames = { 0x01: 'hardReset', 0x02: 'keyOffOnReset', 0x03: 'softReset', 0x04: 'enableRapidPowerShutdown', 0x05: 'disableRapidPowerShutdown' };
+
+  // Reset ECU state
+  ECU.session = 0x01;
+  ECU.sessionName = 'Default';
+  ECU.securityLevel = 0;
+  ECU.P2 = 50; ECU.P2star = 2000;
+  updateECUStatus();
+
+  if (suppress && (sf & 0x80)) return null;
+  return { sid: 0x51, payload: [sf], desc: `复位类型: ${resetNames[sf] || '未知'} — 返回到 Default 会话` };
+}
+
+function handleClearDTC(sf, data, suppress) {
+  if (!ECU.dtcSetting) return negResp(0x14, NRC.CNC);
+  const groupDTC = data.length >= 3 ? (data[0] << 16 | data[1] << 8 | data[2]) : 0xFFFFFF;
+  ECU.dtcs = [];
+  ECU.dtcStatus = { B1: 0x00, B2: 0x00, B3: 0x00 };
+  updateECUStatus();
+  return { sid: 0x54, payload: [], desc: `DTC 已清除 (group=0x${groupDTC.toString(16).padStart(6,'0')})` };
+}
+
+function handleReadDTCInfo(sf, data, suppress) {
+  if (!sf) return negResp(0x19, NRC.IMLOIF);
+  const resSID = 0x59;
+
+  switch (sf) {
+    case 0x01: { // reportNumberOfDTCByStatusMask
+      const mask = data.length >= 1 ? data[0] : 0xFF;
+      const count = ECU.dtcs.filter(d => d.status & mask).length;
+      return { sid: resSID, payload: [sf, 0x03, 0x00, count], desc: `DTC 数量: ${count} (mask=0x${mask.toString(16).padStart(2,'0')})` };
+    }
+    case 0x02: { // reportDTCByStatusMask
+      const mask = data.length >= 1 ? data[0] : 0xFF;
+      let payload = [sf, 0x03];
+      const filtered = ECU.dtcs.filter(d => d.status & mask);
+      payload.push((filtered.length * 4) & 0xFF);
+      for (const dtc of filtered) {
+        payload.push(dtc.high, dtc.middle, dtc.low, dtc.status);
+      }
+      return { sid: resSID, payload, desc: `DTC 报告 (mask=0x${mask.toString(16).padStart(2,'0')})` };
+    }
+    case 0x0A: { // reportSupportedDTC
+      let payload = [sf];
+      for (const dtc of ECU.dtcs) payload.push(dtc.high, dtc.middle, dtc.low, dtc.status);
+      return { sid: resSID, payload, desc: `支持的 DTC: ${ECU.dtcs.length} 个` };
+    }
+    default:
+      // Try to simulate a generic response
+      return { sid: resSID, payload: [sf, 0x00], desc: `reportType=0x${sf.toString(16).padStart(2,'0')} (模拟响应)` };
+  }
+}
+
+function handleReadDID(data, fullReq, suppress) {
+  if (data.length < 2) return negResp(0x22, NRC.IMLOIF);
+  const did = (data[0] << 8) | data[1];
+  const didHex = data[0].toString(16).toUpperCase().padStart(2,'0') + data[1].toString(16).toUpperCase().padStart(2,'0');
+  const values = ECU.dids[didHex];
+  if (!values) return negResp(0x22, NRC.ROOR);
+
+  // Update dynamic values
+  updateDynamicDIDs();
+
+  const sid = 0x62;
+  const payload = [data[0], data[1], ...(ECU.dids[didHex] || [])];
+  const label = ECU.didLabels[didHex] || '未知';
+  const rawStr = (ECU.dids[didHex] || []).map(b => b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
+  return { sid, payload, desc: `DID 0x${didHex} (${label}): ${rawStr}` };
+}
+
+function handleReadMemory(data, suppress) {
+  if (data.length < 1) return negResp(0x23, NRC.IMLOIF);
+  const addFmt = data[0];
+  const addrBytes = addFmt & 0x0F;
+  const lenBytes = (addFmt >> 4) & 0x0F;
+  if (data.length < 1 + addrBytes + lenBytes) return negResp(0x23, NRC.IMLOIF);
+  const memLen = lenBytes > 0 ? parseInt(data.slice(1+addrBytes, 1+addrBytes+lenBytes).map(b=>b.toString(16).padStart(2,'0')).join(''), 16) : 4;
+  const payload = [];
+  for (let i = 0; i < Math.min(memLen, 32); i++) payload.push(0xA0 + (i % 16));
+  return { sid: 0x63, payload, desc: `内存读取: ${memLen} 字节 (addrFmt=0x${addFmt.toString(16).padStart(2,'0')})` };
+}
+
+function handleReadScaling(data, suppress) {
+  if (data.length < 2) return negResp(0x24, NRC.IMLOIF);
+  const didHex = data[0].toString(16).toUpperCase().padStart(2,'0') + data[1].toString(16).toUpperCase().padStart(2,'0');
+  // Return scaling data: unit byte + formula byte + numerator + denominator + offset
+  const unit = 0x01; // 1 = no unit
+  const formula = 0x01; // 1 = linear: value = raw * num/den + offset
+  const payload = [data[0], data[1], unit, formula, 0x01, 0x01, 0x00, 0x00];
+  return { sid: 0x64, payload, desc: `缩放数据 DID 0x${didHex}: linear, raw*1/1+0` };
+}
+
+function handleSecurityAccess(sf, data, fullReq, suppress) {
+  if (!sf) return negResp(0x27, NRC.IMLOIF);
+  const resSID = 0x67;
+  const level = Math.ceil(sf / 2);
+
+  if (sf % 2 === 1) { // Odd = requestSeed
+    if (ECU.securityAttempts >= ECU.securityThreshold) return negResp(0x27, NRC.ENOA);
+    const now = Date.now();
+    if (now - ECU.securityTimers.lastAttempt < ECU.securityTimers.delayMs && ECU.securityAttempts > 0)
+      return negResp(0x27, NRC.RTDNE);
+
+    ECU.securityTimers.lastAttempt = now;
+    ECU.securityUnlockLevel = sf;
+    // Generate different seeds per level
+    ECU.securitySeed = level === 1 ? [0xAA, 0xBB, 0xCC, 0xDD] : [0x11, 0x22, 0x33, 0x44];
+    ECU.securityAttempts++;
+    updateECUStatus();
+    return { sid: resSID, payload: [sf, ...ECU.securitySeed], desc: `请求种子 (level=${level}), 尝试 ${ECU.securityAttempts}/${ECU.securityThreshold}` };
+  } else { // Even = sendKey
+    const expectedKey = level === 1 ? [0x12, 0x34, 0x56, 0x78] : [0xAB, 0xCD, 0xEF, 0x01];
+    const keyData = data || [];
+    const keyMatch = keyData.length === expectedKey.length &&
+      keyData.every((v, i) => v === expectedKey[i]);
+
+    if (!keyMatch) {
+      ECU.securityAttempts++;
+      ECU.securityTimers.lastAttempt = Date.now();
+      if (ECU.securityAttempts >= ECU.securityThreshold + 2) return negResp(0x27, NRC.ENOA);
+      return negResp(0x27, NRC.IK);
+    }
+
+    ECU.securityLevel = level;
+    ECU.securityAttempts = 0;
+    updateECUStatus();
+    return { sid: resSID, payload: [sf], desc: `🔓 安全解锁成功! (Level ${level})` };
+  }
+}
+
+function handleCommControl(sf, data, suppress) {
+  if (sf === undefined || sf === null) return negResp(0x28, NRC.IMLOIF);
+  if (sf > 3) return negResp(0x28, NRC.ROOR);
+  // communicationType byte in data[0] selects subnet
+  ECU.communication = (sf === 0);
+  updateECUStatus();
+  const names = ['启用 RxTx', '仅 Rx 开', '仅 Tx 开', '禁用 RxTx'];
+  return { sid: 0x68, payload: [sf, ...(data.length ? [data[0]] : [0x01])], desc: `通信控制: ${names[sf] || '未知'}` };
+}
+
+function handleReadByPeriodicID(data, suppress) {
+  if (data.length < 1) return negResp(0x2A, NRC.IMLOIF);
+  const periodicID = data[0];
+  // Return 4 bytes of simulated periodic data
+  const payload = [periodicID, 0x00, 0x64, 0x01, 0xF4];
+  return { sid: 0x6A, payload, desc: `周期数据 ID=0x${periodicID.toString(16).padStart(2,'0')}: 4 字节` };
+}
+
+function handleDynamicDefineDID(sf, data, suppress) {
+  if (!sf) return negResp(0x2C, NRC.IMLOIF);
+  if (sf === 0x03) { // clear
+    return { sid: 0x6C, payload: [sf], desc: '动态 DID 已清除' };
+  }
+  // defineByIdentifier or defineByMemoryAddress
+  if (data.length < 4) return negResp(0x2C, NRC.IMLOIF);
+  const newDID = data.slice(0, 2);
+  const sourceCount = data[2];
+  return { sid: 0x6C, payload: [sf, newDID[0], newDID[1]], desc: `动态 DID 0x${newDID.map(b=>b.toString(16).toUpperCase().padStart(2,'0')).join('')} 已定义 (${sourceCount} 个源)` };
+}
+
+function handleWriteDID(data, fullReq, suppress) {
+  if (data.length < 2) return negResp(0x2E, NRC.IMLOIF);
+  const didHex = data[0].toString(16).toUpperCase().padStart(2,'0') + data[1].toString(16).toUpperCase().padStart(2,'0');
+  if (!ECU.dids[didHex]) return negResp(0x2E, NRC.ROOR);
+
+  ECU.dids[didHex] = data.slice(2);
+  updateECUStatus();
+  const valStr = data.slice(2).map(b => b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
+  return { sid: 0x6E, payload: [data[0], data[1]], desc: `DID 0x${didHex} 写入成功: ${valStr}` };
+}
+
+function handleIOControl(sf, data, suppress) {
+  if (sf === undefined || sf === null) return negResp(0x2F, NRC.IMLOIF);
+  if (data.length < 2) return negResp(0x2F, NRC.IMLOIF);
+  const did = data.slice(0, 2);
+  const names = ['returnControlToECU', 'resetToDefault', 'freezeCurrentState', 'shortTermAdjustment'];
+  const name = names[sf] || `0x${sf.toString(16).padStart(2,'0')}`;
+  const ctrlState = data.slice(2);
+  return { sid: 0x6F, payload: [sf, ...did, ...ctrlState],
+    desc: `IO 控制: ${name}, DID=0x${did.map(b=>b.toString(16).toUpperCase().padStart(2,'0')).join('')}${ctrlState.length ? ', state='+ctrlState.map(b=>b.toString(16).toUpperCase().padStart(2,'0')).join(' '):''}` };
+}
+
+function handleRoutine(sf, data, suppress) {
+  if (!sf) return negResp(0x31, NRC.IMLOIF);
+  if (data.length < 2) return negResp(0x31, NRC.IMLOIF);
+  const routineID = (data[0] << 8) | data[1];
+  const rNames = { 0xFF00: 'Erase Memory', 0xFF01: 'Programming', 0xFF02: 'Checksum',
+    0xFF03: 'Request Download Size', 0xFF04: 'Upload Progress' };
+  const rName = rNames[routineID] || `0x${routineID.toString(16).padStart(4,'0')}`;
+
+  if (sf === 0x01) {
+    return { sid: 0x71, payload: [sf, data[0], data[1], 0x00],
+      desc: `🔧 启动例程: ${rName}` };
+  } else if (sf === 0x02) {
+    return { sid: 0x71, payload: [sf, data[0], data[1]],
+      desc: `⏹️ 停止例程: ${rName}` };
+  } else if (sf === 0x03) {
+    const result = routineID === 0xFF02 ? [0x00, 0x64] : [0x00, 0x00];
+    return { sid: 0x71, payload: [sf, data[0], data[1], ...result],
+      desc: `📊 例程结果: ${rName} = 0x${result.map(b=>b.toString(16).toUpperCase().padStart(2,'0')).join('')}` };
+  }
+  return negResp(0x31, NRC.SFNS);
+}
+
+function handleRequestDownload(sf, data, suppress) {
+  if (data.length < 3) return negResp(0x34, NRC.IMLOIF);
+  const dfi = data[0];
+  const alfi = data[1];
+  const addrBytes = alfi & 0x0F;
+  const lenBytes = (alfi >> 4) & 0x0F;
+  if (data.length < 2 + addrBytes + lenBytes) return negResp(0x34, NRC.IMLOIF);
+  ECU.uploadSession = true;
+  ECU.blockSequenceCounter = 0;
+  const maxBlock = 0x100;
+  return { sid: 0x74, payload: [(maxBlock >> 8) & 0xFF, maxBlock & 0xFF],
+    desc: `📥 下载就绪 (DFI=0x${dfi.toString(16).padStart(2,'0')}), 最大块=${maxBlock}B` };
+}
+
+function handleRequestUpload(sf, data, suppress) {
+  if (data.length < 3) return negResp(0x35, NRC.IMLOIF);
+  const alfi = data[1];
+  const maxBlock = 0x100;
+  ECU.uploadSession = true;
+  ECU.blockSequenceCounter = 0;
+  return { sid: 0x75, payload: [(maxBlock >> 8) & 0xFF, maxBlock & 0xFF],
+    desc: `📤 上传就绪, 最大块=${maxBlock}B` };
+}
+
+function handleTransferData(sf, data, suppress) {
+  if (!data.length) return negResp(0x36, NRC.IMLOIF);
+  const bsc = data[0];
+  if (!ECU.uploadSession) return negResp(0x36, NRC.CNC, 'conditionsNotCorrect — 未先调用 RequestDownload/Upload');
+
+  // Check sequence
+  if (bsc !== 0x01 && bsc !== ECU.blockSequenceCounter + 1 &&
+      bsc !== ECU.blockSequenceCounter) { // Allow retransmit
+    return negResp(0x36, NRC.WBSC);
+  }
+  ECU.blockSequenceCounter = bsc;
+  return { sid: 0x76, payload: [bsc],
+    desc: `📦 数据块 #${bsc} 已接收 (${data.length-1}B)` };
+}
+
+function handleTransferExit(sf, data, suppress) {
+  if (!ECU.uploadSession) return negResp(0x37, NRC.CNC, 'conditionsNotCorrect — 没有活跃的传输');
+  ECU.uploadSession = false;
+  const checksum = data.length ? data.map(b => b.toString(16).toUpperCase().padStart(2,'0')).join(' ') : '无';
+  return { sid: 0x77, payload: data || [],
+    desc: `✅ 传输完成 (checksum=${checksum})` };
+}
+
+function handleFileTransfer(sf, data, suppress) {
+  if (!sf) return negResp(0x38, NRC.IMLOIF);
+  const names = { 0x01: 'addFile', 0x02: 'deleteFile', 0x03: 'replaceFile', 0x04: 'readFile', 0x05: 'readDirectory' };
+  const name = names[sf] || `0x${sf.toString(16).padStart(2,'0')}`;
+  const filePath = data.length ? data.slice(0, Math.min(data.length, 8)) : [];
+  return { sid: 0x78, payload: [sf, ...filePath],
+    desc: `📂 文件操作: ${name}${filePath.length ? ', path bytes='+filePath.map(b=>String.fromCharCode(b)).join(''):''}` };
+}
+
+function handleWriteMemory(data, suppress) {
+  if (data.length < 2) return negResp(0x3D, NRC.IMLOIF);
+  const addrLen = data[0];
+  const addrBytes = (addrLen & 0x0F);
+  if (data.length < 1 + addrBytes) return negResp(0x3D, NRC.IMLOIF);
+  const addr = data.slice(1, 1 + addrBytes);
+  const memData = data.slice(1 + addrBytes);
+  return { sid: 0x7D, payload: [...addr, ...memData],
+    desc: `内存写入: 0x${addr.map(b=>b.toString(16).toUpperCase().padStart(2,'0')).join('')}, ${memData.length}B` };
+}
+
+function handleTesterPresent(sf, fullReq, suppress) {
+  if (suppress) return null;
+  // Extend session timeout
+  if (ECU.sessionTimer) clearTimeout(ECU.sessionTimer);
+  if (ECU.session !== 0x01) {
+    ECU.sessionTimer = setTimeout(() => {
+      ECU.session = 0x01;
+      ECU.sessionName = 'Default';
+      ECU.securityLevel = 0;
+      updateECUStatus();
+      addLogEntry([], '⏰ 会话超时 → 返回 Default 会话', 'system');
+    }, ECU.S3);
+  }
+  return { sid: 0x7E, payload: [0x00], desc: '💓 TesterPresent — 会话计时器已重置' };
+}
+
+function handleDTCSetting(sf, data, suppress) {
+  if (sf === undefined || sf === null) return negResp(0x85, NRC.IMLOIF);
+  if (sf !== 0x01 && sf !== 0x02) return negResp(0x85, NRC.ROOR);
+  if (ECU.securityLevel === 0) return negResp(0x85, NRC.SAD);
+  ECU.dtcSetting = (sf === 0x01);
+  updateECUStatus();
+  return { sid: 0xC5, payload: [sf], desc: `DTC 设置: ${ECU.dtcSetting ? '🟢 ON' : '🔴 OFF'}` };
+}
+
+function handleResponseOnEvent(sf, data, suppress) {
+  if (sf === undefined || sf === null) return negResp(0x86, NRC.IMLOIF);
+  const names = { 0x00: 'stopResponseOnEvent', 0x01: 'onDTCStatusChange',
+    0x02: 'onTimerInterrupt', 0x03: 'onChangeOfDataIdentifier' };
+  const name = names[sf] || `0x${sf.toString(16).padStart(2,'0')}`;
+  return { sid: 0xC6, payload: [sf], desc: `事件响应: ${name} 已配置` };
+}
+
+function handleLinkControl(sf, data, suppress) {
+  if (!sf) return negResp(0x87, NRC.IMLOIF);
+  const names = { 0x01: 'verifyFixedBaudrate', 0x02: 'verifySpecificBaudrate', 0x03: 'transitionBaudrate' };
+  const name = names[sf] || `0x${sf.toString(16).padStart(2,'0')}`;
+  const baudData = data.length ? data.slice(0, 2) : [];
+  return { sid: 0xC7, payload: [sf, ...baudData],
+    desc: `🔗 链路控制: ${name}${baudData.length ? ', baudrate='+((baudData[0]<<8|baudData[1])*100)+'bps':''}` };
+}
+
+// ---- Helpers ----
+
+function negResp(sid, nrcCode, customDesc) {
+  ECU.counters.neg++;
+  updateECUStatus();
+  const baseName = NRC_NAMES[nrcCode] || '未知';
+  const desc = customDesc || `❌ ${baseName} (0x${nrcCode.toString(16).padStart(2,'0')})`;
+  return { sid: 0x7F, payload: [sid, nrcCode], isNeg: true, desc };
+}
+
+function updateDynamicDIDs() {
+  // Simulate changing values
+  const rpm = Math.floor(Math.random() * 1000 + 800);
+  ECU.dids['F195'] = [(rpm >> 8) & 0xFF, rpm & 0xFF];
+  const speed = Math.floor(Math.random() * 60 + 20);
+  ECU.dids['F196'] = [(speed >> 8) & 0xFF, speed & 0xFF];
+  const temp = Math.floor(Math.random() * 30 + 70);
+  ECU.dids['F194'] = [0x00, temp];
+}
+
+// ======================== UI UPDATE ========================
+function updateECUStatus() {
+  document.getElementById('ecu-session').textContent = ECU.sessionName;
+  document.getElementById('ecu-session').className = 'value ' +
+    (ECU.session === 0x01 ? 'ok' : ECU.session === 0x02 ? 'err' : 'warn');
+
+  const secEl = document.getElementById('ecu-security');
+  if (ECU.securityLevel > 0) {
+    secEl.textContent = `🔓 Unlocked (Lv${ECU.securityLevel})`;
+    secEl.className = 'value ok';
+  } else {
+    secEl.textContent = '🔒 Locked';
+    secEl.className = 'value err';
+  }
+
+  document.getElementById('ecu-p2').textContent = ECU.P2;
+  document.getElementById('ecu-p2star').textContent = ECU.P2star;
+  document.getElementById('ecu-s3').textContent = ECU.S3;
+  document.getElementById('ecu-comm').textContent = ECU.communication ? 'Normal' : 'Off';
+  document.getElementById('ecu-comm').className = 'value ' + (ECU.communication ? 'ok' : 'err');
+  document.getElementById('ecu-rx').textContent = ECU.counters.rx;
+  document.getElementById('ecu-tx').textContent = ECU.counters.tx;
+  document.getElementById('ecu-pos').textContent = ECU.counters.pos;
+  document.getElementById('ecu-neg').textContent = ECU.counters.neg;
+
+  // Update DID displays
+  for (const key of Object.keys(ECU.didLabels)) {
+    const el = document.getElementById(`did-${key}`);
+    if (el) {
+      const vals = ECU.dids[key];
+      if (vals) {
+        if (vals.every(v => v >= 0x20 && v <= 0x7E)) {
+          el.textContent = String.fromCharCode(...vals);
+        } else {
+          el.textContent = vals.map(b => b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
+        }
+      }
+    }
+  }
+}
+
+// ======================== MESSAGE LOG ========================
+function addLogEntry(bytes, desc, type, reqBytes) {
+  const container = document.getElementById('log-container');
+  const empty = document.getElementById('empty-state');
+  if (empty) empty.style.display = 'none';
+
+  const ts = new Date();
+  const timeStr = ts.toLocaleTimeString('zh-CN', { hour12: false }) + '.' +
+    String(ts.getMilliseconds()).padStart(3,'0');
+
+  const entry = document.createElement('div');
+  entry.className = `msg-entry ${type}`;
+
+  const hexStr = Array.isArray(bytes) ? bytes.map(b =>
+    typeof b === 'number' ? b.toString(16).toUpperCase().padStart(2,'0') : b
+  ).join(' ') : (bytes || '');
+
+  // Decode direction arrow and type
+  let dirSymbol = '', dirClass = type;
+  if (type === 'req') { dirSymbol = '▶'; dirClass = 'req'; }
+  else if (type === 'res') { dirSymbol = '◀'; dirClass = 'res'; }
+  else if (type === 'neg') { dirSymbol = '✕'; dirClass = 'neg'; }
+  else { dirSymbol = '◆'; dirClass = 'res'; }
+
+  entry.innerHTML = `
+    <span class="time">${timeStr}</span>
+    <span class="direction ${dirClass}">${dirSymbol}</span>
+    <div class="content">
+      <div class="bytes ${dirClass}">${hexStr}</div>
+      <div class="desc">${desc}</div>
+    </div>
+  `;
+
+  container.appendChild(entry);
+  container.scrollTop = container.scrollHeight;
+
+  // Update count
+  const countEl = document.getElementById('msg-count');
+  const current = parseInt(countEl.textContent) || 0;
+  countEl.textContent = (current + 1) + ' 条消息';
+}
+
+function clearLog() {
+  const container = document.getElementById('log-container');
+  container.innerHTML = `<div class="empty-state" id="empty-state">
+    <div class="icon">📡</div>
+    <p>日志已清空</p>
+    <div class="hint">使用右侧构造器发送 UDS 请求</div>
+  </div>`;
+  document.getElementById('msg-count').textContent = '0 条消息';
+}
+
+// ======================== SEND MESSAGE ========================
+function sendMessage() {
+  const sid = parseInt(document.getElementById('composer-sid').value);
+  const info = SID_INFO[sid];
+  if (!info) return;
+
+  const reqBytes = [parseInt(info.reqSID, 16)];
+  const sfVal = document.getElementById('composer-sf')?.value;
+  if (sfVal) reqBytes.push(parseInt(sfVal, 16));
+
+  const dataStr = document.getElementById('composer-data').value.trim();
+  if (dataStr) {
+    for (const p of dataStr.split(/[\s,]+/)) {
+      if (/^[0-9a-fA-F]{2}$/.test(p)) reqBytes.push(parseInt(p, 16));
+    }
+  }
+
+  doSend(reqBytes);
+}
+
+function doSend(reqBytes) {
+  // Display request
+  const reqDesc = (SID_INFO[reqBytes[0]]?.name || '?') + ' 请求';
+  addLogEntry(reqBytes, reqDesc, 'req');
+
+  // Simulate P2 delay
+  const p2Delay = Math.min(ECU.P2, 200);
+
+  setTimeout(() => {
+    // Process
+    const result = processRequest(reqBytes);
+    if (result) {
+      const resBytes = [result.sid, ...result.payload];
+      if (result.isNeg) {
+        addLogEntry(resBytes, result.desc, 'neg');
+        ECU.counters.neg++;
+      } else {
+        addLogEntry(resBytes, result.desc, 'res');
+        ECU.counters.pos++;
+      }
+    } else {
+      // Suppressed response
+      addLogEntry([], '⏭️ 正响应已抑制 (suppressPosRspMsgIndicationBit)', 'res');
+    }
+    updateECUStatus();
+  }, p2Delay);
+}
+
+function sendRawHex() {
+  const raw = document.getElementById('hex-raw').value.trim();
+  if (!raw) return;
+  const bytes = [];
+  for (const p of raw.split(/[\s,]+/)) {
+    if (/^[0-9a-fA-F]{2}$/.test(p)) bytes.push(parseInt(p, 16));
+  }
+  if (bytes.length === 0) {
+    showToast('无效的 HEX 输入', 'error');
+    return;
+  }
+  doSend(bytes);
+}
+
+function onRawHex() {
+  const raw = document.getElementById('hex-raw').value.trim();
+  if (!raw) return;
+  const bytes = [];
+  for (const p of raw.split(/[\s,]+/)) {
+    if (/^[0-9a-fA-F]{2}$/.test(p)) bytes.push(parseInt(p, 16));
+  }
+  if (bytes.length > 0) {
+    const sid = bytes[0];
+    const info = SID_INFO[sid];
+    if (info) {
+      document.getElementById('composer-sid').value = sid;
+      onComposerChange();
+    }
+    // Update decode
+    const el = document.getElementById('decode-text');
+    el.innerHTML = `原始 HEX: ${bytes.map(b => b.toString(16).toUpperCase().padStart(2,'0')).join(' ')}<br>长度: ${bytes.length} 字节`;
+  }
+}
+
+// ======================== SCENARIOS ========================
+function waitSend(bytes, delay) {
+  return new Promise(resolve => {
+    setTimeout(() => { doSend(bytes); resolve(); }, delay);
+  });
+}
+
+function runScenario(name) {
+  switch (name) {
+    case 'session-default': doSend([0x10, 0x01]); break;
+    case 'session-extended': doSend([0x10, 0x03]); break;
+    case 'session-programming': doSend([0x10, 0x02]); break;
+    case 'tester-present': doSend([0x3E, 0x00]); break;
+    case 'read-vin': doSend([0x22, 0xF1, 0x90]); break;
+    case 'read-dtc-status': doSend([0x19, 0x02, 0xFF]); break;
+    case 'clear-dtc':
+      addLogEntry([], '🗑️ 尝试清除 DTC（需要非默认会话+安全解锁）', 'req');
+      doSend([0x14, 0xFF, 0xFF, 0xFF]);
+      break;
+    case 'read-multi-did':
+      addLogEntry([], '📊 批量读取 DID: F190, F192, F193', 'req');
+      doSend([0x22, 0xF1, 0x90, 0xF1, 0x92, 0xF1, 0x93]);
+      break;
+    case 'routine-checksum':
+      addLogEntry([], '🔧 启动校验和例程 (需已进入非默认会话)', 'req');
+      doSend([0x31, 0x01, 0xFF, 0x02]);
+      break;
+    case 'security-access':
+      addLogEntry([], '--- 🔐 SecurityAccess Level 1 流程 ---', 'res');
+      addLogEntry([], '步骤 1/2: 进入扩展会话...', 'req');
+      doSend([0x10, 0x03]);
+      setTimeout(() => {
+        addLogEntry([], '步骤 2/3: 请求种子 (0x27 0x01)...', 'req');
+        doSend([0x27, 0x01]);
+        setTimeout(() => {
+          addLogEntry([], '步骤 3/3: 发送密钥 (0x27 0x02 0x12 0x34 0x56 0x78)...', 'req');
+          doSend([0x27, 0x02, 0x12, 0x34, 0x56, 0x78]);
+        }, 400);
+      }, 400);
+      break;
+    case 'ecu-reset': doSend([0x11, 0x01]); break;
+    case 'full-diag-flow':
+      addLogEntry([], '=== 📋 完整诊断流程演示 ===', 'res');
+      addLogEntry([], 'Step 1: 进入扩展会话...', 'req');
+      doSend([0x10, 0x03]);
+      setTimeout(() => {
+        addLogEntry([], 'Step 2: SecurityAccess 请求种子...', 'req');
+        doSend([0x27, 0x01]);
+        setTimeout(() => {
+          addLogEntry([], 'Step 3: 发送密钥解锁...', 'req');
+          doSend([0x27, 0x02, 0x12, 0x34, 0x56, 0x78]);
+          setTimeout(() => {
+            addLogEntry([], 'Step 4: 读取 VIN (DID F190)...', 'req');
+            doSend([0x22, 0xF1, 0x90]);
+            setTimeout(() => {
+              addLogEntry([], 'Step 5: 读取 DTC 状态...', 'req');
+              doSend([0x19, 0x02, 0xFF]);
+              setTimeout(() => {
+                addLogEntry([], 'Step 6: 清除 DTC...', 'req');
+                doSend([0x14, 0xFF, 0xFF, 0xFF]);
+                setTimeout(() => {
+                  addLogEntry([], 'Step 7: TesterPresent 保持会话...', 'req');
+                  doSend([0x3E, 0x00]);
+                  setTimeout(() => {
+                    addLogEntry([], '=== ✅ 诊断流程完成 ===', 'res');
+                  }, 300);
+                }, 300);
+              }, 300);
+            }, 300);
+          }, 300);
+        }, 500);
+      }, 400);
+      break;
+    case 'download-flow':
+      addLogEntry([], '=== 📥 下载流程演示 ===', 'res');
+      addLogEntry([], 'Step 1: 进入编程会话...', 'req');
+      doSend([0x10, 0x02]);
+      setTimeout(() => {
+        addLogEntry([], 'Step 2: RequestDownload...', 'req');
+        doSend([0x34, 0x00, 0x44, 0x00, 0x80, 0x00, 0x10, 0x00]);
+        setTimeout(() => {
+          addLogEntry([], 'Step 3-6: TransferData x4...', 'req');
+          doSend([0x36, 0x01, 0xAA, 0xBB, 0xCC, 0xDD]);
+          setTimeout(() => doSend([0x36, 0x02, 0x11, 0x22, 0x33, 0x44]), 200);
+          setTimeout(() => doSend([0x36, 0x03, 0x55, 0x66, 0x77, 0x88]), 400);
+          setTimeout(() => doSend([0x36, 0x04, 0x99, 0xAA, 0xBB, 0xCC]), 600);
+          setTimeout(() => {
+            addLogEntry([], 'Step 7: RequestTransferExit...', 'req');
+            doSend([0x37, 0x00, 0x00, 0x00, 0x64]);
+          }, 800);
+        }, 400);
+      }, 400);
+      break;
+  }
+}
+
+// ======================== AUTO TP ========================
+function toggleAutoTP() {
+  ECU.autoTP = !ECU.autoTP;
+  document.getElementById('btn-tp').textContent = `⏱️ 自动 TP: ${ECU.autoTP ? '开' : '关'}`;
+  if (ECU.autoTP) {
+    ECU.tpTimer = setInterval(() => {
+      if (ECU.session !== 0x01) {
+        doSend([0x3E, 0x00]);
+      }
+    }, 2000);
+  } else {
+    if (ECU.tpTimer) clearInterval(ECU.tpTimer);
+  }
+}
+
+// ======================== RESET ========================
+function resetECU() {
+  ECU.session = 0x01;
+  ECU.sessionName = 'Default';
+  ECU.securityLevel = 0;
+  ECU.securityAttempts = 0;
+  ECU.P2 = 50; ECU.P2star = 2000; ECU.S3 = 0;
+  ECU.communication = true;
+  ECU.dtcSetting = true;
+  ECU.counters = { rx: 0, tx: 0, pos: 0, neg: 0 };
+  updateECUStatus();
+  addLogEntry([], '🔄 ECU 已复位到默认状态', 'res');
+}
+
+// ======================== TOAST ========================
+function showToast(msg, type) {
+  const toast = document.createElement('div');
+  toast.className = `toast ${type || ''}`;
+  toast.textContent = msg;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2000);
+}
+
+// ======================== INIT ========================
+initComposer();
+updateECUStatus();
+</script>
+</body>
+</html>
