@@ -447,7 +447,10 @@ const SID_INFO = {
   0x10: { name: 'DiagnosticSessionControl', short: 'DSC', unit: 'diagnostic-communication',
     hasSF: true, reqSID: '10', resSID: '50',
     sfs: {
-      '01': 'defaultSession', '02': 'programmingSession', '03': 'extendedDiagnosticSession'
+      '01': 'defaultSession', '02': 'programmingSession', '03': 'extendedDiagnosticSession',
+      '04': 'safetySystemDiagnosticSession',
+      '40-5F': 'vehicleManufacturerSpecific',
+      '60-7E': 'systemSupplierSpecific'
     } },
   0x11: { name: 'ECUReset', short: 'ER', unit: 'diagnostic-communication',
     hasSF: true, reqSID: '11', resSID: '51',
@@ -476,16 +479,17 @@ const SID_INFO = {
     hasSF: true, reqSID: '28', resSID: '68',
     sfs: { '00': 'enableRxAndTx', '01': 'enableRxAndDisableTx',
       '02': 'disableRxAndEnableTx', '03': 'disableRxAndTx' } },
+  0x29: { name: 'Authentication', short: 'Auth', unit: 'diagnostic-communication',
+    hasSF: true, reqSID: '29', resSID: '69',
+    sfs: { '00': 'deAuthenticate', '01': 'verifyCertificateUnidirectional',
+      '02': 'verifyCertificateBidirectional', '03': 'proofOfOwnership',
+      '04': 'transmitCertificate', '05': 'requestChallengeForAuthentication' } },
   0x2A: { name: 'ReadDataByPeriodicIdentifier', short: 'RDBPI', unit: 'data-transmission',
     hasSF: false, reqSID: '2A', resSID: '6A' },
   0x2C: { name: 'DynamicallyDefineDataIdentifier', short: 'DDDI', unit: 'data-transmission',
     hasSF: true, reqSID: '2C', resSID: '6C',
     sfs: { '01': 'defineByIdentifier', '02': 'defineByMemoryAddress',
       '03': 'clearDynamicallyDefinedDataIdentifier' } },
-  0x28: { name: 'CommunicationControl', short: 'CC', unit: 'diagnostic-communication',
-    hasSF: true, reqSID: '28', resSID: '68',
-    sfs: { '00': 'enableRxAndTx', '01': 'enableRxAndDisableTx',
-      '02': 'disableRxAndEnableTx', '03': 'disableRxAndTx' } },
   0x2E: { name: 'WriteDataByIdentifier', short: 'WDBI', unit: 'data-transmission',
     hasSF: false, reqSID: '2E', resSID: '6E' },
   0x2F: { name: 'InputOutputControlByIdentifier', short: 'IOCBI', unit: 'io-control',
@@ -512,6 +516,8 @@ const SID_INFO = {
   0x3E: { name: 'TesterPresent', short: 'TP', unit: 'diagnostic-communication',
     hasSF: true, reqSID: '3E', resSID: '7E',
     sfs: { '00': 'zeroSubFunction', '80': 'zeroSubFunction (suppressResponse)' } },
+  0x84: { name: 'SecuredDataTransmission', short: 'SDT', unit: 'security',
+    hasSF: false, reqSID: '84', resSID: 'C4' },
   0x85: { name: 'ControlDTCSetting', short: 'CDTCS', unit: 'diagnostic-communication',
     hasSF: true, reqSID: '85', resSID: 'C5',
     sfs: { '01': 'on', '02': 'off' } },
@@ -537,7 +543,7 @@ const NRC_NAMES = {};
 for (const [k, v] of Object.entries(NRC)) NRC_NAMES[v] = k;
 
 // Session info
-const SESSION_NAMES = { 0x01: 'Default', 0x02: 'Programming', 0x03: 'Extended' };
+const SESSION_NAMES = { 0x01: 'Default', 0x02: 'Programming', 0x03: 'Extended', 0x04: 'SafetySystem' };
 
 // Comprehensive session permission matrix: which SIDs are allowed in each session
 // 0 = not available, 1 = available, 2 = available but requires security unlocked
@@ -553,19 +559,20 @@ const SESSION_RULES = {
   0x87: { 0x01: 0, 0x02: 1, 0x03: 1, desc: 'LinkControl' },
   // Data Transmission
   0x22: { 0x01: 1, 0x02: 1, 0x03: 1, desc: 'ReadDataByIdentifier' },
-  0x23: { 0x01: 0, 0x02: 1, 0x03: 1, desc: 'ReadMemoryByAddress' },
-  0x24: { 0x01: 0, 0x02: 1, 0x03: 1, desc: 'ReadScalingDataByIdentifier' },
+  0x23: { 0x01: 2, 0x02: 1, 0x03: 1, desc: 'ReadMemoryByAddress' },
+  0x24: { 0x01: 1, 0x02: 1, 0x03: 1, desc: 'ReadScalingDataByIdentifier' },
+  0x29: { 0x01: 1, 0x02: 1, 0x03: 1, desc: 'Authentication' },
   0x2A: { 0x01: 0, 0x02: 1, 0x03: 1, desc: 'ReadDataByPeriodicIdentifier' },
-  0x2C: { 0x01: 0, 0x02: 1, 0x03: 1, desc: 'DynamicallyDefineDataIdentifier' },
+  0x2C: { 0x01: 1, 0x02: 1, 0x03: 1, desc: 'DynamicallyDefineDataIdentifier' },
   0x2E: { 0x01: 2, 0x02: 2, 0x03: 2, desc: 'WriteDataByIdentifier (needs security)' },
-  0x3D: { 0x01: 0, 0x02: 2, 0x03: 2, desc: 'WriteMemoryByAddress (needs security)' },
+  0x3D: { 0x01: 2, 0x02: 2, 0x03: 2, desc: 'WriteMemoryByAddress (needs security)' },
   // Stored Data Transmission
-  0x14: { 0x01: 0, 0x02: 2, 0x03: 2, desc: 'ClearDiagnosticInformation' },
+  0x14: { 0x01: 1, 0x02: 2, 0x03: 2, desc: 'ClearDiagnosticInformation' },
   0x19: { 0x01: 1, 0x02: 1, 0x03: 1, desc: 'ReadDTCInformation' },
   // InputOutput Control
   0x2F: { 0x01: 0, 0x02: 1, 0x03: 1, desc: 'InputOutputControlByIdentifier' },
   // Routine
-  0x31: { 0x01: 0, 0x02: 2, 0x03: 2, desc: 'RoutineControl (needs security for erase/program)' },
+  0x31: { 0x01: 1, 0x02: 2, 0x03: 2, desc: 'RoutineControl (secured routines need security)' },
   // Upload Download
   0x34: { 0x01: 0, 0x02: 1, 0x03: 0, desc: 'RequestDownload (programming only)' },
   0x35: { 0x01: 0, 0x02: 1, 0x03: 0, desc: 'RequestUpload (programming only)' },
@@ -576,9 +583,14 @@ const SESSION_RULES = {
   0x84: { 0x01: 0, 0x02: 1, 0x03: 1, desc: 'SecuredDataTransmission' },
 };
 
+// Auto-inherit safetySystemDiagnosticSession (0x04) rules from extendedSession (0x03)
+for (const [, rules] of Object.entries(SESSION_RULES)) {
+  if (rules[0x03] !== undefined) rules[0x04] = rules[0x03];
+}
+
 // Build SESSION_SERVICES lookup for backward compatibility
 const SESSION_SERVICES = {};
-for (const ses of [0x01, 0x02, 0x03]) {
+for (const ses of [0x01, 0x02, 0x03, 0x04]) {
   SESSION_SERVICES[ses] = [];
   for (const [sid, rules] of Object.entries(SESSION_RULES)) {
     if (rules[ses] && rules[ses] > 0) SESSION_SERVICES[ses].push(parseInt(sid));
@@ -842,10 +854,18 @@ function processRequest(bytes) {
     suppressResponse = !!(data[0] & 0x80);
     data = data.slice(1);
 
-    // Validate subfunction
+    // Validate subfunction (supports range keys like '40-5F')
     const sfHex = sf.toString(16).toUpperCase().padStart(2,'0');
     const sfKeys = Object.keys(info.sfs);
-    if (!sfKeys.includes(sfHex) && !sfKeys.includes(sf.toString(16).toUpperCase().padStart(2,'0'))) {
+    const sfValid = sfKeys.some(key => {
+      if (key === sfHex) return true;
+      if (key.includes('-')) {
+        const [lo, hi] = key.split('-').map(s => parseInt(s, 16));
+        return sf >= lo && sf <= hi;
+      }
+      return false;
+    });
+    if (!sfValid) {
       return negResp(reqSID, NRC.SFNS);
     }
   }
@@ -885,6 +905,7 @@ function handleService(sid, sf, data, fullReq, suppressResponse) {
     case 0x24: return handleReadScaling(data, suppressResponse);
     case 0x27: return handleSecurityAccess(sf, data, fullReq, suppressResponse);
     case 0x28: return handleCommControl(sf, data, suppressResponse);
+    case 0x29: return handleAuthentication(sf, data, fullReq, suppressResponse);
     case 0x2A: return handleReadByPeriodicID(data, suppressResponse);
     case 0x2C: return handleDynamicDefineDID(sf, data, suppressResponse);
     case 0x2E: return handleWriteDID(data, fullReq, suppressResponse);
@@ -897,6 +918,7 @@ function handleService(sid, sf, data, fullReq, suppressResponse) {
     case 0x38: return handleFileTransfer(sf, data, suppressResponse);
     case 0x3D: return handleWriteMemory(data, suppressResponse);
     case 0x3E: return handleTesterPresent(sf, fullReq, suppressResponse);
+    case 0x84: return handleSecuredDataTransmission(sf, data, suppressResponse);
     case 0x85: return handleDTCSetting(sf, data, suppressResponse);
     case 0x86: return handleResponseOnEvent(sf, data, suppressResponse);
     case 0x87: return handleLinkControl(sf, data, suppressResponse);
@@ -908,18 +930,27 @@ function handleService(sid, sf, data, fullReq, suppressResponse) {
 
 function handleDSC(sf, data, fullReq, suppress) {
   if (!sf) return negResp(0x10, NRC.IMLOIF);
-  const sessionTypes = { 0x01: 'Default', 0x02: 'Programming', 0x03: 'Extended' };
-  if (!(sf in sessionTypes)) return negResp(0x10, NRC.ROOR);
+  const sessionTypes = { 0x01: 'Default', 0x02: 'Programming', 0x03: 'Extended', 0x04: 'SafetySystem' };
+  // Standard sessions + manufacturer/supplier specific ranges
+  const validSessions = [0x01, 0x02, 0x03, 0x04];
+  const isRangeSession = (sf >= 0x40 && sf <= 0x5F) || (sf >= 0x60 && sf <= 0x7E);
+  if (!validSessions.includes(sf) && !isRangeSession) return negResp(0x10, NRC.ROOR);
 
   const oldSession = ECU.session;
   ECU.session = sf;
-  ECU.sessionName = sessionTypes[sf];
+  // Generate a display name for range sessions
+  ECU.sessionName = sessionTypes[sf] ||
+    (sf >= 0x40 && sf <= 0x5F ? `VendorSpecific(0x${sf.toString(16).toUpperCase().padStart(2,'0')})` :
+     sf >= 0x60 && sf <= 0x7E ? `SupplierSpecific(0x${sf.toString(16).toUpperCase().padStart(2,'0')})` :
+     `Session_0x${sf.toString(16).toUpperCase().padStart(2,'0')}`);
   ECU.securityLevel = 0; // Reset security on session change
 
   // Update P2 timers based on session
   if (sf === 0x01) { ECU.P2 = 50; ECU.P2star = 2000; ECU.S3 = 0; }
   else if (sf === 0x02) { ECU.P2 = 50; ECU.P2star = 5000; ECU.S3 = 5000; }
   else if (sf === 0x03) { ECU.P2 = 50; ECU.P2star = 2000; ECU.S3 = 5000; }
+  else if (sf === 0x04) { ECU.P2 = 50; ECU.P2star = 2000; ECU.S3 = 5000; }
+  else { ECU.P2 = 50; ECU.P2star = 2000; ECU.S3 = 5000; } // range sessions
 
   updateECUStatus();
   if (suppress && (fullReq[1] & 0x80)) return null;
@@ -1246,6 +1277,33 @@ function handleLinkControl(sf, data, suppress) {
   const baudData = data.length ? data.slice(0, 2) : [];
   return { sid: 0xC7, payload: [sf, ...baudData],
     desc: `🔗 链路控制: ${name}${baudData.length ? ', baudrate='+((baudData[0]<<8|baudData[1])*100)+'bps':''}` };
+}
+
+function handleAuthentication(sf, data, fullReq, suppress) {
+  if (sf === undefined || sf === null) return negResp(0x29, NRC.IMLOIF);
+  const resSID = 0x69;
+  const authTasks = {
+    0x00: 'deAuthenticate', 0x01: 'verifyCertificateUnidirectional',
+    0x02: 'verifyCertificateBidirectional', 0x03: 'proofOfOwnership',
+    0x04: 'transmitCertificate', 0x05: 'requestChallengeForAuthentication'
+  };
+  const taskName = authTasks[sf] || `0x${sf.toString(16).padStart(2,'0')}`;
+
+  if (sf === 0x00) {
+    // deAuthenticate — re-lock security
+    ECU.securityLevel = 0;
+    updateECUStatus();
+  }
+  return { sid: resSID, payload: [sf], desc: `🔐 Authentication: ${taskName} ${sf === 0x00 ? '— 已解除认证' : '(模拟响应)'}` };
+}
+
+function handleSecuredDataTransmission(sf, data, suppress) {
+  if (!data || data.length < 2) return negResp(0x84, NRC.IMLOIF);
+  const securitySubLayer = data[0];
+  // Unwrap and echo back the inner message content for simulation
+  const innerData = data.slice(1);
+  return { sid: 0xC4, payload: [securitySubLayer, ...innerData],
+    desc: `🔒 安全数据传输: subLayer=0x${securitySubLayer.toString(16).padStart(2,'0')}, 内部数据 ${innerData.length}B (模拟响应)` };
 }
 
 // ---- Helpers ----

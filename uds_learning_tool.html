@@ -509,8 +509,24 @@ const SERVICES = [
     desc: '基于 PKI 证书或挑战-应答机制的身份认证服务。ISO 14229-1:2020 新增。',
     reqFmt: '29 + subFunction + [authenticationData]',
     resFmt: '69 + subFunction + [data]',
-    nrcs: ['13', '22', '24', '31', '33', '34', '38', '39', '3A', '50-5D', '7E', '7F'],
-    detail: '2020 版新增的安全认证服务。支持 PKI 证书交换 (APCE) 和挑战-应答 (ACR) 两种模式。提供比 SecurityAccess 更强的安全保障。' },
+    subfuncs: [
+      { val: '01', name: 'authenticateUser', desc: '发起身份认证请求（作为 deAuthenticate 时不含数据）' },
+      { val: '02', name: 'deAuthenticate', desc: '取消当前身份认证状态' },
+      { val: '03', name: 'getCertificateRequest', desc: '请求 ECU 发送其证书（APCE 模式第一步）' },
+      { val: '04', name: 'sendCertificate', desc: '向 ECU 发送证书（APCE 模式第二步）' },
+      { val: '05', name: 'getChallengeRequest', desc: '请求挑战值（ACR 模式第一步）' },
+      { val: '06', name: 'sendChallengeResponse', desc: '发送挑战响应（ACR 模式第二步）' },
+      { val: '07', name: 'getAuthenticationResult', desc: '获取认证结果（两模式均使用）' },
+      { val: '08', name: 'verifyCertificate', desc: '验证远程证书的有效性' },
+      { val: '09-7E', name: 'ISOSAEReserved / vehicleManufacturerSpecific', desc: '保留或制造商特定子功能' },
+      { val: '7F', name: 'ISOSAEReserved', desc: '保留' },
+    ],
+    nrcs: ['13', '22', '24', '31', '33', '34', '37', '38', '39', '3A', '50-5D', '7E', '7F'],
+    detail: '2020 版新增的安全认证服务。支持 PKI 证书交换模式(APCE) 和挑战-应答(ACR) 两种认证流程。' +
+      'APCE 四步流程: deAuthenticate→getCertificateRequest→sendCertificate→getAuthenticationResult。' +
+      'ACR 三步流程: deAuthenticate→getChallengeRequest→sendChallengeResponse→getAuthenticationResult。' +
+      '增加 NRC 0x37(authenticationRequired)，认证未完成时返回。' +
+      '使用 authenticatedUserCertificates 参数可指定证书身份。' },
   { sid: 0x2A, name: 'ReadDataByPeriodicIdentifier', shortName: 'RDBPI', unit: 'data-transmission', reqSID: '2A', resSID: '6A',
     desc: '按周期标识符读取数据。服务器按预定义的周期性数据标识符持续发送数据。',
     reqFmt: '2A + periodicDataIdentifier (1 byte)',
@@ -733,25 +749,32 @@ const NRCS = [
 ];
 
 const SESSIONS = [
-  { val: '01', name: 'defaultSession', desc: '默认诊断会话。服务器上电后的初始会话。所有服务器必须支持。\n受限功能: 只读、基本诊断服务。需要安全解锁/非默认会话的服务不可用。',
+  { val: '01', name: 'defaultSession', desc: '默认诊断会话。服务器上电后的初始会话。所有服务器必须支持。\n支持基本诊断、读/写 DID、清除 DTC、例程等。访问受保护的数据/内存/例程需要非默认会话+安全解锁。',
     transitions: [
       { to: '01', desc: '通过 DiagnosticSessionControl(01) 保持会话' },
       { to: '02', desc: '通过 DiagnosticSessionControl(02) 进入编程会话' },
       { to: '03', desc: '通过 DiagnosticSessionControl(03) 进入扩展诊断会话' }
     ],
-    services: ['10', '11', '19', '22', '3E', '86'] },
+    services: ['10', '11', '14', '19', '22', '24', '29', '2C', '2E', '31', '3D', '3E', '86'] },
   { val: '02', name: 'programmingSession', desc: '编程诊断会话。用于 ECU 软件刷写/编程。\n特点: 支持上传下载相关服务。通常需要安全访问。离开时需 ECUReset 或切换到其他会话。',
     transitions: [
       { to: '01', desc: '通过 DiagnosticSessionControl(01) 或 ECUReset + hardReset 返回' },
       { to: '03', desc: '通过 DiagnosticSessionControl(03) 进入扩展诊断会话' }
     ],
-    services: ['10', '11', '19', '22', '27', '28', '2E', '2F', '31', '34', '35', '36', '37', '38', '3E', '85', '86', '87', '14', '3D'] },
+    services: ['10', '11', '14', '19', '22', '23', '24', '27', '28', '29', '2A', '2C', '2E', '2F', '31', '34', '35', '36', '37', '38', '3D', '3E', '85', '86', '87'] },
   { val: '03', name: 'extendedDiagnosticSession', desc: '扩展诊断会话。提供更多诊断功能，通常用于标定、测试和复杂诊断。\n特点: 支持内存访问、IO 控制、例程等高级功能。',
     transitions: [
       { to: '01', desc: '通过 DiagnosticSessionControl(01) 或 ECUReset 返回默认会话' },
       { to: '02', desc: '通过 DiagnosticSessionControl(02) 进入编程会话' }
     ],
-    services: ['10', '11', '19', '22', '23', '24', '27', '28', '2A', '2C', '2E', '2F', '31', '3D', '3E', '85', '86', '87', '14'] }
+    services: ['10', '11', '14', '19', '22', '23', '24', '27', '28', '29', '2A', '2C', '2E', '2F', '31', '3D', '3E', '85', '86', '87'] },
+  { val: '04', name: 'safetySystemDiagnosticSession', desc: '安全系统诊断会话(ISO 14229-1:2020 新增)。用于安全系统相关的功能(如气囊展开)。\n特点: 类似扩展诊断会话，支持安全系统标定和测试。通常需要安全访问。',
+    transitions: [
+      { to: '01', desc: '通过 DiagnosticSessionControl(01) 返回默认会话' },
+      { to: '02', desc: '通过 DiagnosticSessionControl(02) 进入编程会话' },
+      { to: '03', desc: '通过 DiagnosticSessionControl(03) 进入扩展诊断会话' }
+    ],
+    services: ['10', '11', '14', '19', '22', '23', '24', '27', '28', '29', '2A', '2C', '2E', '2F', '31', '3D', '3E', '85', '86', '87'] }
 ];
 
 // Quiz data
@@ -987,12 +1010,13 @@ function getServiceExclusivity(sid, sessionVal) {
   if (inOthers.length === 2) return 'common';
   if (inOthers.length === 0) {
     // Exclusive to this session
-    const map = { '01': 'excl-default', '02': 'excl-prog', '03': 'excl-ext' };
+    const map = { '01': 'excl-default', '02': 'excl-prog', '03': 'excl-ext', '04': 'excl-safety' };
     return map[sessionVal] || 'common';
   }
   const otherVal = inOthers[0];
   if (otherVal === '03') return 'shared-ext';
   if (otherVal === '02') return 'shared-prog';
+  if (otherVal === '04') return 'shared-safety';
   return 'common';
 }
 
@@ -1004,12 +1028,13 @@ function renderSessions() {
     '01': { name: 'Default', border: '#6366f1', bg: '#f5f3ff', darkBg: '#2e1065' },
     '02': { name: 'Programming', border: '#dc2626', bg: '#fef2f2', darkBg: '#7f1d1d' },
     '03': { name: 'Extended', border: '#2563eb', bg: '#f0f9ff', darkBg: '#1e3a5f' },
+    '04': { name: 'SafetySystem', border: '#059669', bg: '#f0fdf4', darkBg: '#14532d' },
   };
 
   // Service count stats
   let html = '<div class="stats-row">';
   for (const s of SESSIONS) {
-    const exclCount = s.services.filter(sid => getServiceExclusivity(sid, s.val) === ('excl-' + { '01':'default','02':'prog','03':'ext' }[s.val])).length;
+    const exclCount = s.services.filter(sid => getServiceExclusivity(sid, s.val) === ('excl-' + { '01':'default','02':'prog','03':'ext','04':'safety' }[s.val])).length;
     html += `<div class="stat-card">
       <div class="num" style="font-size:1rem">${s.services.length}</div>
       <div class="label">${s.name} <span style="color:var(--accent);font-size:.7rem">(${exclCount} 专属)</span></div>
@@ -1023,6 +1048,7 @@ function renderSessions() {
     <span><span class="dot" style="background:#f59e0b"></span> 共享</span>
     <span><span class="dot" style="background:#dc2626"></span> 🔒 编程专属</span>
     <span><span class="dot" style="background:#2563eb"></span> 🔒 扩展专属</span>
+    <span><span class="dot" style="background:#059669"></span> 🔒 安全系统专属</span>
   </div>`;
 
   // Functional unit legend
@@ -1035,7 +1061,7 @@ function renderSessions() {
 
   for (const s of SESSIONS) {
     const col = sesColors[s.val];
-    const exclMap = { '01': 'excl-default', '02': 'excl-prog', '03': 'excl-ext' };
+    const exclMap = { '01': 'excl-default', '02': 'excl-prog', '03': 'excl-ext', '04': 'excl-safety' };
 
     html += `<div class="service-card fade-in" style="cursor:default;border-left:4px solid ${col.border}">
       <div class="header">
@@ -1065,6 +1091,7 @@ function renderSessions() {
             else if (exclusivity.startsWith('excl')) tip = '⚠️ 仅此会话可用';
             else if (exclusivity === 'shared-prog') tip = '与 Programming 会话共享';
             else if (exclusivity === 'shared-ext') tip = '与 Extended 会话共享';
+            else if (exclusivity === 'shared-safety') tip = '与 SafetySystem 会话共享';
             // Exclusive icon
             const isExcl = exclusivity.startsWith('excl');
             const unitColor = UNIT_COLORS[svc?.unit] || '#94a3b8';
@@ -1081,10 +1108,10 @@ function renderSessions() {
   html += `<div class="service-card fade-in" style="cursor:default;margin-top:1.5rem">
     <div class="header"><span class="name">🔄 会话转换关系图</span></div>
     <div style="display:flex;gap:1rem;justify-content:center;align-items:center;padding:1.5rem 1rem;flex-wrap:wrap">
-      ${['01','02','03'].map((val, i) => {
+      ${['01','02','03','04'].map((val, i) => {
         const col = sesColors[val];
         const s = SESSIONS.find(x => x.val === val);
-        const arrow = i < 2 ? `<div style="display:flex;flex-direction:column;align-items:center;font-size:1.2rem;color:${sesColors['01'].border};padding:0 8px">
+        const arrow = i < 3 ? `<div style="display:flex;flex-direction:column;align-items:center;font-size:1.2rem;color:${sesColors['01'].border};padding:0 8px">
           <span>⇄</span><span style="font-size:.6rem;color:var(--text3)">DSC</span></div>` : '';
         return `<div style="text-align:center;padding:.8rem 1.2rem;border:2px solid ${col.border};border-radius:12px;min-width:110px;background:var(--card)">
           <div style="font-size:.75rem;color:${col.border};font-weight:700">0x${val}</div>
@@ -1097,7 +1124,8 @@ function renderSessions() {
       <strong>🔵 默认会话</strong> → ECUReset、会话超时后自动返回<br>
       <strong>🔴 编程会话</strong> → 专用于 ECU 刷写，包含上传/下载服务<br>
       <strong>🔷 扩展会话</strong> → 高级诊断功能，内存访问、IO 控制等<br>
-      使用 <strong>DiagnosticSessionControl(0x10)</strong> 在会话间切换
+      <strong>🟢 安全系统会话</strong> → 安全系统相关诊断（ISO 14229-1:2020 新增）<br>
+       使用 <strong>DiagnosticSessionControl(0x10)</strong> 在会话间切换
     </div>
   </div>`;
 
