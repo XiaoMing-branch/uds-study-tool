@@ -1,0 +1,7 @@
+/* ============================================
+   Shared CSS — UDS Study Tool & Simulator
+   CSS reset and base styles
+   ============================================ */
+
+/* CSS Reset */
+* { margin: 0; padding: 0; box-sizing: border-box; }
