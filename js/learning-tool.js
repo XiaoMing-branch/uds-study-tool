@@ -1162,14 +1162,6 @@ function renderLINContent() {
   c.comparison.rows.forEach(r => { html += `<tr><td>${r[0]}</td><td class="col-can">${r[1]}</td><td class="col-lin">${r[2]}</td></tr>`; });
   html += `</table></div>`;
 
-  // Timing
-  html += `<div class="bus-section"><div class="sec-title">${c.timing.title}</div><div class="bus-card"><p style="font-size:.85rem;color:var(--text2)">${c.timing.desc}</p></div></div>`;
-
-  // Comparison
-  html += `<div class="bus-section"><div class="sec-title">${c.comparison.title}</div><table class="comparison-table"><tr><th>特性</th><th class="col-can">CAN</th><th class="col-lin">LIN</th></tr>`;
-  c.comparison.rows.forEach(r => { html += `<tr><td>${r[0]}</td><td class="col-can">${r[1]}</td><td class="col-lin">${r[2]}</td></tr>`; });
-  html += `</table></div>`;
-
   tab.innerHTML = html;
   tab.dataset.rendered = '1';
 }
