@@ -150,6 +150,52 @@ UDS（Unified Diagnostic Services，统一诊断服务）是 ISO 14229-1 标准�
 | 启动校验例程 | 发送 31 01 FF 02，启动 checksum 例行程序 |
 | 下载流程演示 | 7 步流程：进入编程会话 → RequestDownload → 4 次 TransferData → RequestTransferExit |
 
+---
+
+## CAN 总线与 LIN 总线通信
+
+ud2 工具现已集成 CAN 总线 (ISO 11898) 和 LIN 总线 (ISO 17987) 通信模式的教学与模拟。
+
+### uds_learning_tool.html — 新增标签页
+
+学习工具新增 2 个知识标签页：
+
+- **🚌 CAN 总线** — CAN 2.0A/B 帧结构、CSMA/CR 仲裁原理、5 种错误检测、TEC/REC 错误状态机、CAN FD 对比
+- **📡 LIN 总线** — LIN 帧结构 (同步间隔/0x55/PID/数据/校验和)、主从架构、调度表、CAN vs LIN 对比表
+
+在知识测验中新增 10 道 CAN/LIN 相关选择题，可按主题筛选。
+
+### uds_simulator.html — CAN 面板增强
+
+现有 CAN 面板深度增强：
+
+- **帧格式切换** — 支持 CAN 2.0A (标准 11-bit ID)、CAN 2.0B (扩展 29-bit ID)、CAN FD 三种格式
+- **错误注入** — 5 种错误类型: CRC 错误、ACK 错误、填充错误、格式错误、总线关闭 (Bus Off)
+- **总线状态机** — TEC/REC 计数器实时跟踪，自动在 Error Active → Error Passive → Bus Off 之间转换
+- **仲裁演示** — 可视化多节点竞争过程，展示低 ID 优先的 CSMA/CR 机制
+- **帧结构标注** — Toggle 开关显示每个 CAN 帧字段的颜色标注 (SOF/仲裁/控制/数据/CRC/ACK/EOF)
+- **总线负载率** — 实时计算并显示近 1 秒内的总线占用百分比
+
+### uds_simulator.html — LIN 面板新增
+
+新增完整的 LIN 总线模拟面板：
+
+- **主从模式** — Master 与 Slave 双角色，主节点维护调度表
+- **调度表** — 预设 5 个典型 LIN 信号 (车速/转速/水温/灯光/主节点状态)
+- **帧日志** — 实时显示 LIN 帧的同步字节、PID (含奇偶校验)、数据、校验和
+- **唤醒/休眠** — 模拟 LIN 总线的唤醒脉冲 (250μs) 和休眠命令
+- **校验和** — 使用 LIN 2.0 增强校验和算法计算
+
+### 新增预设场景
+
+| 场景 | 说明 |
+|------|------|
+| CAN 仲裁演示 | 演示 3 个节点 (0x7E0/0x7E8/0x7F0) 竞争总线, 低 ID 获胜 |
+| CAN 错误注入 | 连续触发填充错误 + CRC 错误, 观察 TEC/REC 变化 |
+| CAN Bus Off | 强制 TEC > 255, 节点进入 Bus Off 状态 |
+| LIN 调度演示 | Master 按 600ms 间隔发送车速/转速/水温/灯光/状态帧 |
+| LIN 唤醒 | 发送 250μs 显性唤醒脉冲 |
+
 ### 自动 TesterPresent
 
 开启后，ECU 在非默认会话中每 2 秒自动发送一条 3E 00 消息，模拟真实诊断工具的行为，防止会话超时。
