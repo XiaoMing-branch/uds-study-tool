@@ -421,6 +421,28 @@ const QUIZ = [
   { q: '以下哪个是 CAN 总线是 UDS 传输层协议？', a: 0, opts: ['ISO 15765-2 (CAN TP / DoCAN)', 'CAN 2.0B', 'CAN FD', 'LIN 2.1'], topic: 'general', explain: 'ISO 15765-2 (DoCAN - Diagnostics on CAN) 是 UDS over CAN 的传输层和网络层协议。' },
   { q: 'UDS 消息中 suppressPosRspMsgIndicationBit 的作用是什么？', a: 1, opts: ['关闭所有通信', '抑制正响应消息（bit7=1 时不发正响应）', '抑制负响应消息', '启用快速响应模式'], topic: 'general', explain: '子功能参数的 bit7 为 suppressPosRspMsgIndicationBit。设置为 1 时，服务器不发送正响应消息。' },
   { q: 'NRC 0x33 表示什么？', a: 2, opts: ['密钥无效', '需要认证', '安全访问被拒绝', '需要安全数据传输'], topic: 'nrc', explain: '0x33 = securityAccessDenied (SAD)。服务器安全策略未满足。' },
+  // CAN quiz
+  { q: 'CAN 2.0A 标准帧的仲裁场 ID 是多少位？', a: 1, opts: ['29 bit', '11 bit', '18 bit', '8 bit'], topic: 'can', explain: 'CAN 2.0A 标准帧使用 11-bit ID。CAN 2.0B 扩展帧使用 29-bit ID。' },
+  { q: 'CAN 总线仲裁使用的机制是？', a: 0, opts: ['CSMA/CR (载波监听/冲突解决)', 'CSMA/CD (冲突检测)', 'Token Ring', '主从轮询'], topic: 'can', explain: 'CAN使用CSMA/CR, 显性位覆盖隐性位实现无损仲裁。ID越小优先级越高。' },
+  { q: 'CAN 帧中 CRC 场占用多少位？', a: 2, opts: ['8 bit', '16 bit', '15 bit', '32 bit'], topic: 'can', explain: 'CAN标准帧使用15-bit CRC(含1 bit分隔符)。' },
+  { q: 'CAN 发送节点如何检测 ACK 错误？', a: 1, opts: ['自己发送ACK位', '在ACK时隙采样总线, 若隐性则检测到ACK错误', '接收节点发错误帧', '由CRC替代'], topic: 'can', explain: '发送节点在ACK时隙发送隐性位, 若无节点拉为显性, 则ACK错误。' },
+  { q: 'Error Passive 状态节点检测到错误后？', a: 3, opts: ['发主动错误帧', '进入Bus Off', '停止通信', '发被动错误帧(6隐性位)'], topic: 'can', explain: 'Error Passive节点发被动错误标志(6个隐性位), 不干扰其他节点。TEC/REC>127进入此状态。' },
+  { q: 'CAN FD 相比 CAN 2.0 主要改进？', a: 2, opts: ['更长ID', '更高电压', '更高数据速率(≤8Mbps)+更长数据场(≤64bytes)', '增加4根信号线'], topic: 'can', explain: 'CAN FD支持≤8Mbps数据速率和64字节数据场, 向下兼容CAN 2.0。' },
+  // LIN quiz
+  { q: 'LIN 总线架构是？', a: 0, opts: ['单主多从', '多主', '对等网络', '星型'], topic: 'lin', explain: 'LIN采用单主多从架构。Master负责调度和报头, Slave响应。' },
+  { q: 'LIN 同步字节固定值？', a: 3, opts: ['0x00', '0x7F', '0xAA', '0x55'], topic: 'lin', explain: 'LIN同步字节固定为0x55(01010101), 用于从节点同步位时钟。' },
+  { q: 'LIN 总线最高速率？', a: 1, opts: ['125 kbps', '20 kbps', '1 Mbps', '500 kbps'], topic: 'lin', explain: 'LIN最高速率20 kbps(ISO 17987), 实际常用9.6k/10.4k/19.2k baud。' },
+  { q: 'LIN 调度表作用？', a: 2, opts: ['分配CAN ID', '配置从节点地址', '定义报文发送顺序和时间', '管理错误恢复'], topic: 'lin', explain: 'LIN调度表由Master维护, 定义报文帧发送顺序和时间间隙。' },
+  { q:'CAN 2.0A标准帧ID位数?',a:1,opts:['29bit','11bit','18bit','8bit'],topic:'can',explain:'CAN 2.0A使用11-bit ID。2.0B扩展帧使用29-bit ID。'},
+  { q:'CAN仲裁机制?',a:0,opts:['CSMA/CR','CSMA/CD','Token Ring','主从轮询'],topic:'can',explain:'CSMA/CR:显性位覆盖隐性位,ID越小优先级越高。'},
+  { q:'CAN CRC场位数?',a:2,opts:['8bit','16bit','15bit','32bit'],topic:'can',explain:'CAN标准帧15-bit CRC(含分隔符)。'},
+  { q:'CAN如何检测ACK错误?',a:1,opts:['自己发ACK','ACK时隙采样总线若隐性则检测到','接收节点发错误帧','CRC替代'],topic:'can',explain:'发送者在ACK时隙发隐性,无节点拉显性则ACK错误。'},
+  { q:'Error Passive节点行为?',a:3,opts:['发主动错误帧','进入Bus Off','停止通信','发被动错误帧(6隐性位)'],topic:'can',explain:'Error Passive发被动错误标志,不干扰其他节点。TEC/REC>127进入。'},
+  { q:'CAN FD主要改进?',a:2,opts:['更长ID','更高电压','更高速率(≤8Mbps)+更长数据场(≤64bytes)','增加4根线'],topic:'can',explain:'CAN FD支持≤8Mbps和64字节数据场,向下兼容。'},
+  { q:'LIN总线架构?',a:0,opts:['单主多从','多主','对等网络','星型'],topic:'lin',explain:'LIN单主多从。Master调度+报头,Slave响应。'},
+  { q:'LIN同步字节值?',a:3,opts:['0x00','0x7F','0xAA','0x55'],topic:'lin',explain:'0x55(01010101)用于从节点位时钟同步。'},
+  { q:'LIN最高速率?',a:1,opts:['125kbps','20kbps','1Mbps','500kbps'],topic:'lin',explain:'LIN≤20kbps(ISO17987),常用9.6/10.4/19.2k。'},
+  { q:'LIN调度表作用?',a:2,opts:['分配CAN ID','配置从节点地址','定义报文发送顺序和时间','管理错误恢复'],topic:'lin',explain:'由Master维护,定义帧发送顺序和时间间隙。'},
 ];
 
 // ======================== RENDER ========================
@@ -939,3 +961,223 @@ renderHexMap();
 renderSessions();
 initBuilder();
 startQuiz();
+
+// ======================== CAN BUS CONTENT ========================
+
+const CAN_CONTENT = {
+  overview: {
+    title: 'CAN 总线概述',
+    desc: 'CAN (Controller Area Network) 是一种多主串行通信总线，由 Bosch 于 1986 年开发，ISO 11898 标准定义。广泛应用于汽车动力总成、底盘控制、车身电子等领域。',
+    specs: ['标准: ISO 11898', '速率: ≤1Mbps (CAN 2.0) / ≤8Mbps (CAN FD)', '帧: 标准 11-bit ID / 扩展 29-bit ID', '拓扑: 线性总线 + 120Ω 终端电阻', '仲裁: CSMA/CR', '错误检测: 5种机制']
+  },
+  frame: {
+    title: 'CAN 帧结构 (标准数据帧)',
+    fields: [
+      { name: 'SOF', bits: '1', desc: '帧起始 — 1个显性位同步所有节点', cls: 'sof', color: '#ef4444' },
+      { name: '仲裁场', bits: '12/32', desc: '11-bit ID+RTR / 29-bit ID+SRR+IDE+RTR', cls: 'arb', color: '#3b82f6' },
+      { name: '控制场', bits: '6', desc: 'IDE+r0+4-bit DLC(0-8)', cls: 'ctrl', color: '#f59e0b' },
+      { name: '数据场', bits: '0-64', desc: '0-8字节(CAN 2.0) / 0-64字节(CAN FD)', cls: 'data', color: '#10b981' },
+      { name: 'CRC场', bits: '16', desc: '15-bit CRC+分隔符, 错误检测', cls: 'crc', color: '#a855f7' },
+      { name: 'ACK场', bits: '2', desc: '1-bit ACK+分隔符, 接收节点确认', cls: 'ack', color: '#ec4899' },
+      { name: 'EOF', bits: '7', desc: '帧结束 — 7个隐性位', cls: 'eof', color: '#6b7280' }
+    ]
+  },
+  arbitration: {
+    title: 'CAN 总线仲裁 (CSMA/CR)',
+    desc: 'CAN使用无损仲裁机制。多个节点同时发送时, 显性位(0)覆盖隐性位(1)。ID最小的帧获得总线访问权。',
+    example: '节点A(0x7E0) vs 节点B(0x7E8) vs 节点C(0x7F0) → 节点A获胜'
+  },
+  errors: {
+    title: 'CAN 错误处理',
+    items: [
+      { name: '位错误 (Bit Error)', desc: '发送位与总线电平不一致 (仲裁/ACK时隙除外)', cls: 'bit-err' },
+      { name: '填充错误 (Stuff Error)', desc: '连续6个同极性位 (位填充: 5同+1反)', cls: 'stuff-err' },
+      { name: 'CRC 错误', desc: '接收方计算的CRC与发送方不一致', cls: 'crc-err' },
+      { name: '格式错误 (Form Error)', desc: '固定位字段出现非法值 (CRC分隔符/ACK分隔符/EOF)', cls: 'form-err' },
+      { name: 'ACK 错误', desc: '发送方在ACK时隙未检测到显性位', cls: 'ack-err' }
+    ]
+  },
+  state: {
+    title: 'CAN 错误状态机',
+    states: [
+      { name: 'Error Active', cond: 'TEC≤127, REC≤127', desc: '正常通信, 主动错误标志', cls: 'active' },
+      { name: 'Error Passive', cond: 'TEC>127 或 REC>127', desc: '仍可通信, 被动错误标志', cls: 'passive' },
+      { name: 'Bus Off', cond: 'TEC>255', desc: '与总线断开, 128次11位隐性后恢复', cls: 'busoff' }
+    ]
+  },
+  canfd: {
+    title: 'CAN FD 对比',
+    rows: [
+      ['数据速率', '≤1 Mbps', '≤8 Mbps'],
+      ['数据场', '0-8 bytes', '0-64 bytes'],
+      ['CRC', '15 bit', '17/21 bit'],
+      ['兼容性', '—', '向下兼容 CAN 2.0']
+    ]
+  }
+};
+
+function renderCANContent() {
+  const tab = document.getElementById('tab-canbus');
+  if (!tab || tab.dataset.rendered) return;
+  const c = CAN_CONTENT;
+  let html = '';
+
+  // Overview
+  html += `<div class="bus-section"><div class="sec-title">${c.overview.title}</div><div class="sec-desc">${c.overview.desc}</div><div class="bus-card"><ul style="list-style:none;padding:0">`;
+  c.overview.specs.forEach(s => { html += `<li style="padding:4px 0;font-size:.85rem;color:var(--text2)">• ${s}</li>`; });
+  html += `</ul></div></div>`;
+
+  // Frame Structure
+  html += `<div class="bus-section"><div class="sec-title">${c.frame.title}</div>`;
+  html += `<div class="frame-diagram">`;
+  c.frame.fields.forEach(f => {
+    html += `<div class="frame-byte ${f.cls}" style="background:${f.color}" title="${f.desc}"><span class="label">${f.name}</span><span class="value">${f.bits}bit</span></div>`;
+  });
+  html += `</div>`;
+  c.frame.fields.forEach(f => {
+    html += `<div style="font-size:.75rem;color:var(--text2);margin:2px 0"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${f.color};margin-right:6px"></span><b>${f.name} (${f.bits} bit)</b> — ${f.desc}</div>`;
+  });
+  html += `</div>`;
+
+  // Arbitration
+  html += `<div class="bus-section"><div class="sec-title">${c.arbitration.title}</div><div class="bus-card"><p class="sec-desc">${c.arbitration.desc}</p><p style="font-family:var(--font-mono);font-size:.8rem;padding:.5rem;background:var(--card2);border-radius:6px">${c.arbitration.example}</p></div></div>`;
+
+  // Error Handling
+  html += `<div class="bus-section"><div class="sec-title">${c.errors.title}</div><div class="bus-card">`;
+  c.errors.items.forEach(e => { html += `<span class="error-tag ${e.cls}" title="${e.desc}">${e.name}</span>`; });
+  html += `<div style="margin-top:1rem">`;
+  c.errors.items.forEach(e => { html += `<p style="font-size:.82rem;margin:6px 0"><b>${e.name}:</b> ${e.desc}</p>`; });
+  html += `</div></div></div>`;
+
+  // State Machine
+  html += `<div class="bus-section"><div class="sec-title">${c.state.title}</div><div class="state-machine">`;
+  c.state.states.forEach((s, i) => {
+    html += `<div class="state-node ${s.cls}"><span class="sn-name">${s.name}</span><span class="sn-cond">${s.cond}</span><span style="font-size:.65rem;color:var(--text3);margin-top:4px">${s.desc}</span></div>`;
+    if (i < c.state.states.length - 1) { html += `<span class="state-arrow">→</span>`; }
+  });
+  html += `</div></div>`;
+
+  // CAN FD
+  html += `<div class="bus-section"><div class="sec-title">${c.canfd.title}</div><table class="comparison-table"><tr><th>特性</th><th class="col-can">CAN 2.0</th><th class="col-lin">CAN FD</th></tr>`;
+  c.canfd.rows.forEach(r => { html += `<tr><td>${r[0]}</td><td class="col-can">${r[1]}</td><td class="col-lin">${r[2]}</td></tr>`; });
+  html += `</table></div>`;
+
+  tab.innerHTML = html;
+  tab.dataset.rendered = '1';
+}
+
+// ======================== LIN BUS CONTENT ========================
+
+const LIN_CONTENT = {
+  overview: {
+    title: 'LIN 总线概述',
+    desc: 'LIN (Local Interconnect Network) 是一种低成本、低速的单主多从串行通信总线, ISO 17987 标准定义。作为 CAN 的子总线, 广泛应用于车窗、座椅、空调、雨刮等车身舒适系统。',
+    specs: ['标准: ISO 17987', '速率: ≤20 kbps (常用 9.6/10.4/19.2 kbps)', '架构: 单主多从', '线数: 1线+地 (单线制)', '成本: 极低 (UART/SCI 基础)', '电压: 隐性 12V / 显性 0V']
+  },
+  frame: {
+    title: 'LIN 帧结构',
+    fields: [
+      { name: '同步间隔', desc: '13+ bits 显性 (Master 发送)', cls: 'sof', color: '#ef4444' },
+      { name: '同步字节', desc: '0x55 (01010101) 用于位时钟同步', cls: 'arb', color: '#3b82f6' },
+      { name: 'PID', desc: '6-bit ID + 2-bit 奇偶校验', cls: 'ctrl', color: '#f59e0b' },
+      { name: '数据', desc: '1-8 字节数据', cls: 'data', color: '#10b981' },
+      { name: '校验和', desc: '经典/增强校验和', cls: 'crc', color: '#a855f7' }
+    ]
+  },
+  masterslave: {
+    title: 'LIN 主从架构',
+    master: { role: 'Master (主节点)', tasks: ['发送报头 (Header)', '维护调度表', '管理总线唤醒/休眠'] },
+    slave: { role: 'Slave (从节点)', tasks: ['响应 Master 报头', '发送数据帧', '接收命令'] }
+  },
+  schedule: {
+    title: 'LIN 调度表',
+    desc: '调度表由 Master 维护, 定义报文的发送顺序和时间间隙。每个条目指定帧 ID 和最坏情况发送时间。',
+    entries: [
+      { id: '0x10', name: '车速', period: '10ms' },
+      { id: '0x11', name: '转速', period: '10ms' },
+      { id: '0x12', name: '水温', period: '100ms' },
+      { id: '0x30', name: '灯光', period: '100ms' },
+      { id: '0x3C', name: '主节点状态', period: '50ms' }
+    ]
+  },
+  timing: {
+    title: 'LIN 总线电平与唤醒',
+    desc: '隐性 (Recessive): 12V (逻辑1)。显性 (Dominant): 0V (逻辑0)。唤醒: Master 发送 250μs 显性脉冲。休眠: Master 发送 0x00 的 Go-To-Sleep 命令。'
+  },
+  comparison: {
+    title: 'CAN vs LIN 对比',
+    rows: [
+      ['速率', '≤1 Mbps (CAN FD: ≤8Mbps)', '≤20 kbps'],
+      ['架构', '多主 (CSMA/CR)', '单主多从'],
+      ['线数', '2线 (CAN_H + CAN_L)', '1线 + 地'],
+      ['成本', '中等', '低'],
+      ['容错', '5种错误检测, 完善', '基本 (校验和)'],
+      ['应用', '动力总成, 底盘, 安全', '车身, 舒适系统']
+    ]
+  }
+};
+
+function renderLINContent() {
+  const tab = document.getElementById('tab-linbus');
+  if (!tab || tab.dataset.rendered) return;
+  const c = LIN_CONTENT;
+  let html = '';
+
+  // Overview
+  html += `<div class="bus-section"><div class="sec-title">${c.overview.title}</div><div class="sec-desc">${c.overview.desc}</div><div class="bus-card"><ul style="list-style:none;padding:0">`;
+  c.overview.specs.forEach(s => { html += `<li style="padding:4px 0;font-size:.85rem;color:var(--text2)">• ${s}</li>`; });
+  html += `</ul></div></div>`;
+
+  // Frame Structure
+  html += `<div class="bus-section"><div class="sec-title">${c.frame.title}</div><div class="frame-diagram">`;
+  const colors$1 = ['#ef4444','#3b82f6','#f59e0b','#10b981','#a855f7'];
+  c.frame.fields.forEach((f, i) => {
+    html += `<div class="frame-byte" style="background:${colors$1[i]}" title="${f.desc}"><span class="label">${f.name}</span></div>`;
+  });
+  html += `</div>`;
+  c.frame.fields.forEach((f, i) => {
+    html += `<div style="font-size:.75rem;color:var(--text2);margin:2px 0"><span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${colors$1[i]};margin-right:6px"></span><b>${f.name}</b> — ${f.desc}</div>`;
+  });
+  html += `</div>`;
+
+  // Master/Slave
+  html += `<div class="bus-section"><div class="sec-title">${c.masterslave.title}</div><div style="display:flex;gap:1rem;flex-wrap:wrap">`;
+  [{ side: c.masterslave.master, color: '#3b82f6' }, { side: c.masterslave.slave, color: '#10b981' }].forEach(({ side, color }) => {
+    html += `<div class="bus-card" style="flex:1;min-width:200px;border-left:3px solid ${color}"><h3>${side.role}</h3><ul style="font-size:.82rem;color:var(--text2);padding-left:1.2rem">`;
+    side.tasks.forEach(t => { html += `<li>${t}</li>`; });
+    html += `</ul></div>`;
+  });
+  html += `</div></div>`;
+
+  // Schedule
+  html += `<div class="bus-section"><div class="sec-title">${c.schedule.title}</div><div class="sec-desc">${c.schedule.desc}</div><table class="comparison-table"><tr><th>帧 ID</th><th>信号</th><th>周期</th></tr>`;
+  c.schedule.entries.forEach(e => { html += `<tr><td style="font-family:var(--font-mono)">${e.id}</td><td>${e.name}</td><td>${e.period}</td></tr>`; });
+  html += `</table></div>`;
+
+  // Timing
+  html += `<div class="bus-section"><div class="sec-title">${c.timing.title}</div><div class="bus-card"><p style="font-size:.85rem;color:var(--text2)">${c.timing.desc}</p></div></div>`;
+
+  // Comparison
+  html += `<div class="bus-section"><div class="sec-title">${c.comparison.title}</div><table class="comparison-table"><tr><th>特性</th><th class="col-can">CAN</th><th class="col-lin">LIN</th></tr>`;
+  c.comparison.rows.forEach(r => { html += `<tr><td>${r[0]}</td><td class="col-can">${r[1]}</td><td class="col-lin">${r[2]}</td></tr>`; });
+  html += `</table></div>`;
+
+  // Timing
+  html += `<div class="bus-section"><div class="sec-title">${c.timing.title}</div><div class="bus-card"><p style="font-size:.85rem;color:var(--text2)">${c.timing.desc}</p></div></div>`;
+
+  // Comparison
+  html += `<div class="bus-section"><div class="sec-title">${c.comparison.title}</div><table class="comparison-table"><tr><th>特性</th><th class="col-can">CAN</th><th class="col-lin">LIN</th></tr>`;
+  c.comparison.rows.forEach(r => { html += `<tr><td>${r[0]}</td><td class="col-can">${r[1]}</td><td class="col-lin">${r[2]}</td></tr>`; });
+  html += `</table></div>`;
+
+  tab.innerHTML = html;
+  tab.dataset.rendered = '1';
+}
+
+// Initialize CAN/LIN content on page load
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    renderCANContent();
+    renderLINContent();
+  }, 100);
+});
