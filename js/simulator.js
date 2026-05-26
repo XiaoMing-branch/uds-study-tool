@@ -2932,23 +2932,37 @@ function stopErrorDemo() {
 let canFrameEntries = [];
 const CAN_MAX_FRAMES = 50;
 
+let canConfig = {
+  format: '2.0A',
+  annotate: false,
+  busState: 'active',
+  tec: 0,
+  rec: 0,
+  totalFrames: 0,
+  frameTimestamps: [],
+  errorInjection: null
+};
+
 function makeCANFrame(bytes, direction) {
   const REQ_ID = 0x7E0;
   const RES_ID = 0x7E8;
   const isReq = (direction === 'req');
   const canId = isReq ? REQ_ID : RES_ID;
   const dataLen = bytes.length;
+  const fmtPrefix = canConfig.format === '2.0B' ? '[EXT]' : canConfig.format === 'FD' ? '[FD]' : '';
   return {
     id: canId,
-    idHex: canId.toString(16).toUpperCase().padStart(3, '0'),
+    idHex: canId.toString(16).toUpperCase().padStart(canConfig.format === '2.0B' ? 6 : 3, '0'),
     dlc: dataLen > 8 ? (dataLen > 64 ? 64 : dataLen) : 8,
     data: bytes.slice(0, 8),
     dataHex: bytes.slice(0, 8).map(function(b) {
       return b.toString(16).toUpperCase().padStart(2, '0');
     }).join(' '),
-    isExtended: false,
+    isExtended: canConfig.format === '2.0B',
     direction: direction,
     rawBytes: bytes,
+    capturedAt: performance.now(),
+    formatPrefix: fmtPrefix,
   };
 }
 
@@ -2964,6 +2978,12 @@ function logCANFrame(bytes, direction) {
 
   renderCANFrame(frame);
   updateCANStatus();
+
+  canConfig.frameTimestamps.push({time: performance.now(), bits: canConfig.format === '2.0B' ? 128 : 108});
+  canConfig.totalFrames++;
+  const now = performance.now();
+  canConfig.frameTimestamps = canConfig.frameTimestamps.filter(function(f) { return now - f.time < 1000; });
+  updateCANEnhancedUI();
 }
 
 function renderCANFrame(frame) {
@@ -2975,8 +2995,9 @@ function renderCANFrame(frame) {
   if (emptyEl) emptyEl.remove();
 
   const ts = frame.timestamp;
+  const fmtTag = frame.formatPrefix ? ' ' + frame.formatPrefix : '';
   const timeStr = ts.toLocaleTimeString('zh-CN', { hour12: false }) + '.' +
-    String(ts.getMilliseconds()).padStart(3, '0');
+    String(ts.getMilliseconds()).padStart(3, '0') + fmtTag;
 
   const dirSymbol = frame.direction === 'req' ? '▶' :
     frame.direction === 'neg' ? '✕' : '◀';
@@ -3030,6 +3051,184 @@ function clearCANLog() {
   }
   updateCANStatus();
 }
+
+function injectCANError(type) {
+  canConfig.errorInjection = type;
+  if (type === 'bus-off') { canConfig.tec = 256; }
+  else { canConfig.tec += 8; }
+  updateCANBusState();
+  updateCANEnhancedUI();
+  const el = document.getElementById('can-frame-list');
+  if (!el) return;
+  const err = document.createElement('div');
+  err.className = 'can-frame can-error-frame';
+  err.innerHTML = '<span class="cf-time">' + new Date().toLocaleTimeString() + '</span><span class="cf-dir" style="color:#ef4444">⚠</span><span class="cf-data" style="color:#ef4444">Error: ' + type.toUpperCase() + '</span>';
+  el.prepend(err);
+}
+
+function demoCANArbitration() {
+  const el = document.getElementById('can-frame-list');
+  if (!el) return;
+  const nodes = [{id:'0x7E0',pri:'High',clr:'#10b981'},{id:'0x7E8',pri:'Med',clr:'#f59e0b'},{id:'0x7F0',pri:'Low',clr:'#ef4444'}];
+  const now = new Date().toLocaleTimeString();
+  nodes.forEach(function(n, i) {
+    setTimeout(function() {
+      const div = document.createElement('div');
+      div.className = 'can-frame' + (i===0?'':' can-arbiter-lost');
+      div.style.cssText = i>0 ? 'opacity:.5;text-decoration:line-through' : '';
+      div.innerHTML = '<span class="cf-time">' + now + '</span><span class="cf-dir" style="color:' + n.clr + '">▶</span><span class="cf-data">ID ' + n.id + ' (' + n.pri + ')' + (i===0?' ✓ WINS':'') + '</span>';
+      el.prepend(div);
+    }, i*400);
+  });
+}
+
+function updateCANBusState() {
+  if (canConfig.tec > 255) canConfig.busState = 'bus-off';
+  else if (canConfig.tec > 127 || canConfig.rec > 127) canConfig.busState = 'passive';
+  else canConfig.busState = 'active';
+}
+
+function calculateCANBusLoad() {
+  var now2 = performance.now();
+  canConfig.frameTimestamps = canConfig.frameTimestamps.filter(function(f) { return now2 - f.time < 1000; });
+  var totalBits = canConfig.frameTimestamps.reduce(function(s, f) { return s + f.bits; }, 0);
+  return Math.min(100, Math.round((totalBits / 1000000) * 100));
+}
+
+function updateCANEnhancedUI() {
+  var stateEl = document.getElementById('can-bus-state');
+  var tecEl = document.getElementById('can-tec');
+  var recEl = document.getElementById('can-rec');
+  var loadEl = document.getElementById('can-load');
+  if (stateEl) {
+    var states = {active:['Error Active','var(--success)'],passive:['Error Passive','var(--warning,#f59e0b)'],'bus-off':['Bus Off','var(--danger,#ef4444)']};
+    var s = states[canConfig.busState]||states.active;
+    stateEl.textContent = s[0]; stateEl.style.color = s[1];
+  }
+  if (tecEl) tecEl.textContent = canConfig.tec;
+  if (recEl) recEl.textContent = canConfig.rec;
+  if (loadEl) loadEl.textContent = calculateCANBusLoad();
+}
+
+(function initCANUI() {
+  var fmtSel = document.getElementById('can-format-select');
+  if (fmtSel) fmtSel.addEventListener('change', function() { canConfig.format = this.value; });
+  var annToggle = document.getElementById('can-annotate-toggle');
+  if (annToggle) annToggle.addEventListener('change', function() { canConfig.annotate = this.checked; updateCANEnhancedUI(); });
+  setInterval(updateCANEnhancedUI, 500);
+})();
+
+// LIN Bus Engine
+var linState = { mode: 'master', active: false, frames: [], scheduleActive: false, currentSlot: 0, maxFrames: 50 };
+var LIN_SCHEDULE = [
+  { id: 0x10, name: '车速', period: '10ms' },
+  { id: 0x11, name: '转速', period: '10ms' },
+  { id: 0x12, name: '水温', period: '100ms' },
+  { id: 0x30, name: '灯光控制', period: '100ms' },
+  { id: 0x3C, name: '主节点状态', period: '50ms' }
+];
+
+function toggleLINPanel() {
+  var body = document.getElementById('lin-body');
+  var toggle = document.getElementById('lin-toggle');
+  if (!body || !toggle) return;
+  body.classList.toggle('open');
+  toggle.classList.toggle('open');
+}
+
+function setLINMode(mode) { linState.mode = mode; updateLINStatusDisplay(); }
+
+function calculateLINParity(id) { var p0 = ((id>>0)&1)^((id>>1)&1)^((id>>2)&1)^((id>>4)&1); var p1 = ~(((id>>1)&1)^((id>>3)&1)^((id>>4)&1)^((id>>5)&1))&1; return (id&0x3F)|(p0<<6)|(p1<<7); }
+
+function calculateLINChecksum(data, pid, enhanced) {
+  var sum = enhanced ? pid : 0;
+  for (var i=0;i<data.length;i++){ sum += data[i]; if(sum>=256)sum=(sum&0xFF)+(sum>>8); }
+  return (~sum)&0xFF;
+}
+
+function sendLINFrame(id, data) {
+  var pid = calculateLINParity(id);
+  var checksum = calculateLINChecksum(data, pid, true);
+  var frame = { time: new Date().toLocaleTimeString(), dir: linState.mode==='master'?'M→S':'S→M', pid: pid, data: data, chk: checksum };
+  linState.frames.unshift(frame);
+  if (linState.frames.length > linState.maxFrames) linState.frames.pop();
+  renderLINFrameList();
+  updateLINStatusDisplay();
+}
+
+function sendLINWakeUp() {
+  var el = document.getElementById('lin-frame-list'); if (!el) return;
+  var div = document.createElement('div');
+  div.className = 'lin-frame';
+  div.innerHTML = '<span class="lin-time">' + new Date().toLocaleTimeString() + '</span><span class="lin-dir" style="color:#f59e0b">⚡</span><span class="lin-pid">WAKE</span><span class="lin-data">250μs dominant pulse</span>';
+  el.prepend(div);
+  var led = document.getElementById('lin-bus-led'); if (led) { led.className = 'lin-bus-led wake'; setTimeout(function(){led.className='lin-bus-led active';},500); }
+}
+
+function sendLINSleep() {
+  sendLINFrame(0x3C, [0x00]);
+  var led = document.getElementById('lin-bus-led');
+  if (led) { led.className = 'lin-bus-led idle'; }
+  var label = document.getElementById('lin-bus-label');
+  if (label) label.textContent = 'Sleep';
+}
+
+function runLINMasterSchedule() {
+  if (linState.scheduleActive) { linState.scheduleActive = false; updateLINStatusDisplay(); return; }
+  linState.scheduleActive = true;
+  updateLINStatusDisplay();
+  renderLINSchedule();
+  function sendNext() {
+    if (!linState.scheduleActive) return;
+    var entry = LIN_SCHEDULE[linState.currentSlot % LIN_SCHEDULE.length];
+    var data = [];
+    for (var i=0;i<4;i++) data.push(Math.floor(Math.random()*256));
+    sendLINFrame(entry.id, data);
+    linState.currentSlot++;
+    setTimeout(sendNext, 600);
+  }
+  sendNext();
+}
+
+function renderLINFrameList() {
+  var el = document.getElementById('lin-frame-list'); if (!el) return;
+  var h = '';
+  for (var i=0;i<linState.frames.length;i++) {
+    var f = linState.frames[i];
+    h += '<div class="lin-frame"><span class="lin-time">' + f.time + '</span><span class="lin-dir">' + f.dir + '</span><span class="lin-pid">0x' + f.pid.toString(16).toUpperCase().padStart(2,'0') + '</span><span class="lin-data">' + f.data.map(function(b){return b.toString(16).toUpperCase().padStart(2,'0');}).join(' ') + '</span><span class="lin-chk">0x' + f.chk.toString(16).toUpperCase().padStart(2,'0') + '</span></div>';
+  }
+  el.innerHTML = h || '<div class="lin-empty">No LIN frames</div>';
+  var countEl = document.getElementById('lin-frame-count');
+  if (countEl) countEl.textContent = linState.frames.length;
+}
+
+function renderLINSchedule() {
+  var el = document.getElementById('lin-schedule-list'); if (!el) return;
+  var h = '';
+  LIN_SCHEDULE.forEach(function(e) {
+    h += '<div class="lin-schedule-item"><span class="lin-sched-id">0x' + e.id.toString(16).toUpperCase() + '</span><span class="lin-sched-desc">' + e.name + ' (' + e.period + ')</span></div>';
+  });
+  el.innerHTML = h || '<div class="lin-empty">No schedule entries</div>';
+}
+
+function clearLINLog() { linState.frames = []; renderLINFrameList(); }
+
+function updateLINStatusDisplay() {
+  var label = document.getElementById('lin-bus-label');
+  if (label) label.textContent = linState.scheduleActive ? 'Running (' + linState.mode + ')' : (linState.mode === 'master' ? 'Master Idle' : 'Slave Idle');
+  var led = document.getElementById('lin-bus-led');
+  if (led) led.className = 'lin-bus-led' + (linState.scheduleActive ? ' active' : ' idle');
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    var fmtSel = document.getElementById('can-format-select');
+    if (fmtSel) fmtSel.addEventListener('change', function() { canConfig.format = this.value; });
+    var annToggle = document.getElementById('can-annotate-toggle');
+    if (annToggle) annToggle.addEventListener('change', function() { canConfig.annotate = this.checked; });
+    setInterval(updateCANEnhancedUI, 500);
+  }, 300);
+});
 
 // ======================== DoIP (ISO 13400) ========================
 const DOIP_TYPES = {

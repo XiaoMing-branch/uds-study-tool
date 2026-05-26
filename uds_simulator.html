@@ -120,6 +120,26 @@
           <div class="sc-name" data-i18n="scenario.flash">📥 完整刷写流程（含多帧）</div>
           <div class="sc-desc" data-i18n="scenario.desc.flash">10→27→31→34→36×8→37→复位 完整刷写序列</div>
         </div>
+        <div class="scenario-item" onclick="demoCANArbitration(); toggleCANPanel()">
+          <div class="sc-name">🚌 CAN 仲裁演示</div>
+          <div class="sc-desc">演示多节点竞争总线, 低 ID 优先获胜</div>
+        </div>
+        <div class="scenario-item" onclick="injectCANError('stuff'); setTimeout(function(){ injectCANError('crc'); }, 1500); toggleCANPanel()">
+          <div class="sc-name">⚠ CAN 错误注入</div>
+          <div class="sc-desc">触发填充错误 + CRC 错误, 观察错误帧</div>
+        </div>
+        <div class="scenario-item" onclick="injectCANError('bus-off'); toggleCANPanel()">
+          <div class="sc-name">🔴 CAN Bus Off</div>
+          <div class="sc-desc">强制 TEC > 255, 节点进入 Bus Off 状态</div>
+        </div>
+        <div class="scenario-item" onclick="runLINMasterSchedule(); toggleLINPanel()">
+          <div class="sc-name">📡 LIN 调度演示</div>
+          <div class="sc-desc">Master 按调度表发送车速/转速/水温等 LIN 帧</div>
+        </div>
+        <div class="scenario-item" onclick="sendLINWakeUp(); toggleLINPanel()">
+          <div class="sc-name">🔌 LIN 唤醒</div>
+          <div class="sc-desc">发送 250μs 显性脉冲唤醒总线</div>
+        </div>
       </div>
     </div>
 
@@ -382,7 +402,33 @@
           <div class="can-status" id="can-status">
             <span class="can-bus-state"><span class="can-bus-led active" id="can-bus-led"></span><span id="can-bus-label">活跃</span></span>
             <span class="can-count">帧计数: <span id="can-frame-count">0</span></span>
-            <span class="can-ids">ID: 0x7E0 (请求) | 0x7E8 (响应)</span>
+            <span class="can-ids">ID: 0x7E0 (发送) | 0x7E8 (响应)</span>
+          </div>
+          <div class="can-format-row">
+            <label>Frame:</label>
+            <select id="can-format-select">
+              <option value="2.0A">CAN 2.0A (Std)</option>
+              <option value="2.0B">CAN 2.0B (Ext)</option>
+              <option value="FD">CAN FD</option>
+            </select>
+            <label class="toggle-label">
+              <input type="checkbox" id="can-annotate-toggle"> Annotate
+            </label>
+          </div>
+          <div class="can-status-line" id="can-status-line">
+            <span>State: <span id="can-bus-state" style="color:var(--success)">Error Active</span></span>
+            <span>TEC:<span id="can-tec">0</span> REC:<span id="can-rec">0</span></span>
+            <span>Load: <span id="can-load">0</span>%</span>
+          </div>
+          <div class="can-error-actions">
+            <button class="btn btn-sm" onclick="injectCANError('crc')">CRC Err</button>
+            <button class="btn btn-sm" onclick="injectCANError('ack')">ACK Err</button>
+            <button class="btn btn-sm" onclick="injectCANError('stuff')">Stuff Err</button>
+            <button class="btn btn-sm" onclick="injectCANError('form')">Form Err</button>
+            <button class="btn btn-sm btn-danger" onclick="injectCANError('bus-off')">Bus Off</button>
+          </div>
+          <div class="can-arbitration-row">
+            <button class="btn btn-sm" onclick="demoCANArbitration()">Demo Arbitration</button>
           </div>
           <div class="can-frame-list" id="can-frame-list">
             <div class="can-empty">等待 CAN 帧...</div>
@@ -455,6 +501,41 @@
           </div>
           <div class="doip-log" id="doip-log">
             <div class="doip-empty" id="doip-empty">等待 DoIP 报文...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIN Bus Panel -->
+      <div class="lin-section">
+        <div class="lin-header" onclick="toggleLINPanel()">
+          <span>📡 LIN Bus <span style="font-weight:400;font-size:.65rem;color:var(--text3)">ISO 17987</span></span>
+          <span class="lin-toggle" id="lin-toggle">▶</span>
+        </div>
+        <div class="lin-body" id="lin-body">
+          <div class="lin-mode-bar">
+            <label><input type="radio" name="linMode" value="master" checked onchange="setLINMode('master')"> Master</label>
+            <label><input type="radio" name="linMode" value="slave" onchange="setLINMode('slave')"> Slave</label>
+            <span class="lin-bus-type">📡 LIN v2.2</span>
+          </div>
+          <div class="lin-schedule-table" id="lin-schedule-table">
+            <div class="lin-schedule-header">📋 Schedule</div>
+            <div class="lin-schedule-list" id="lin-schedule-list">
+              <div class="lin-empty">Click Start to begin</div>
+            </div>
+          </div>
+          <div class="lin-frame-list" id="lin-frame-list">
+            <div class="lin-empty">No LIN frames</div>
+          </div>
+          <div class="lin-actions">
+            <button class="btn btn-sm btn-primary" onclick="runLINMasterSchedule()" style="flex:1">▶ Start</button>
+            <button class="btn btn-sm" onclick="sendLINWakeUp()">🔌 Wake</button>
+            <button class="btn btn-sm" onclick="sendLINSleep()">💤 Sleep</button>
+            <button class="btn btn-sm" onclick="clearLINLog()">🧹 Clear</button>
+          </div>
+          <div class="lin-status" id="lin-status">
+            <span class="lin-bus-state"><span class="lin-bus-led idle" id="lin-bus-led"></span><span id="lin-bus-label">Idle</span></span>
+            <span class="lin-count">Frames: <span id="lin-frame-count">0</span></span>
+            <span class="lin-baud">BAUD: 19.2 kbps</span>
           </div>
         </div>
       </div>

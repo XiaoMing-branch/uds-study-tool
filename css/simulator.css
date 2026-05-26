@@ -518,3 +518,67 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .doip-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: .4rem; }
 .doip-actions .btn { flex: 1; justify-content: center; min-width: 80px; }
 .doip-power-select { font-family: var(--font-mono); font-size: .75rem; padding: .3rem .5rem; border: 1px solid var(--border); border-radius: 6px; background: var(--card2); color: var(--text); }
+
+/* CAN Enhanced Controls */
+.can-format-row { display: flex; align-items: center; gap: 10px; padding: .4rem .6rem; background: var(--card2); border-radius: 6px; margin-bottom: .5rem; font-size: .78rem; flex-wrap: wrap; }
+.can-format-row select { font-family: var(--font-mono); font-size: .75rem; padding: .3rem .5rem; border: 1px solid var(--border); border-radius: 6px; background: var(--card); color: var(--text); }
+.toggle-label { display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: .75rem; }
+.toggle-label input { accent-color: var(--primary); }
+
+.can-status-line { display: flex; gap: 16px; padding: .4rem .6rem; font-size: .72rem; font-family: var(--font-mono); color: var(--text2); flex-wrap: wrap; }
+.can-status-line span { white-space: nowrap; }
+
+.can-error-actions { display: flex; gap: 6px; padding: .3rem .6rem; flex-wrap: wrap; margin-bottom: .4rem; }
+.can-error-actions .btn { font-size: .68rem; padding: .25rem .6rem; }
+.can-error-actions .btn-danger { background: #ef4444; color: #fff; border-color: #dc2626; }
+
+.can-arbitration-row { padding: .3rem .6rem; margin-bottom: .4rem; }
+
+.can-annotated-frame { display: flex; gap: 3px; margin-top: .3rem; flex-wrap: wrap; }
+.af-byte { padding: 2px 8px; border-radius: 4px; color: #fff; font-size: .65rem; font-family: var(--font-mono); font-weight: 600; }
+
+.can-error-frame { border-left-color: #ef4444 !important; background: rgba(239,68,68,.08) !important; }
+@keyframes canErrorPulse { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
+.can-error-frame { animation: canErrorPulse 1.5s infinite; }
+
+/* LIN Bus Panel */
+.lin-section { margin-top: 1rem; border-top: 1px solid var(--border); padding-top: .5rem; }
+.lin-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: .4rem 0; font-size: .8rem; color: var(--text2); user-select: none; }
+.lin-header:hover { color: var(--text); }
+.lin-toggle { font-size: .7rem; color: var(--text3); transition: transform .2s; }
+.lin-toggle.open { transform: rotate(90deg); }
+.lin-body { display: none; padding: .3rem 0; }
+.lin-body.open { display: block; }
+.lin-mode-bar { display: flex; align-items: center; gap: 12px; padding: .5rem .6rem; background: var(--card2); border-radius: 6px; font-size: .78rem; margin-bottom: .6rem; flex-wrap: wrap; }
+.lin-mode-bar label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+.lin-mode-bar input[type="radio"] { accent-color: var(--primary); }
+.lin-bus-type { margin-left: auto; font-size: .68rem; color: var(--text3); font-family: var(--font-mono); }
+
+.lin-schedule-table { margin-bottom: .6rem; }
+.lin-schedule-header { font-size: .72rem; color: var(--text2); margin-bottom: 4px; }
+.lin-schedule-list { max-height: 120px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; background: var(--card); border-radius: 6px; padding: .3rem; }
+.lin-schedule-list::-webkit-scrollbar { width: 4px; }
+.lin-schedule-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.lin-schedule-item { display: flex; align-items: center; gap: 8px; padding: .3rem .5rem; border-radius: 4px; background: var(--card2); font-size: .72rem; font-family: var(--font-mono); border-left: 3px solid var(--primary); }
+.lin-schedule-item.lin-active { background: var(--primary); color: #fff; }
+
+.lin-frame-list { max-height: 200px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; margin-bottom: .5rem; }
+.lin-frame-list::-webkit-scrollbar { width: 4px; }
+.lin-frame-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+.lin-frame { display: flex; align-items: flex-start; gap: 6px; padding: .3rem .5rem; border-radius: 4px; background: var(--card2); font-size: .72rem; font-family: var(--font-mono); border-left: 3px solid #6366f1; }
+.lin-frame .lin-time { color: var(--text3); min-width: 72px; flex-shrink: 0; }
+.lin-frame .lin-dir { color: #6366f1; font-weight: 600; min-width: 16px; }
+.lin-frame .lin-pid { color: #ec4899; min-width: 40px; font-weight: 600; }
+.lin-frame .lin-data { color: var(--text2); flex: 1; word-break: break-all; }
+.lin-frame .lin-chk { color: #f59e0b; min-width: 40px; }
+.lin-empty { font-size: .72rem; color: var(--text3); padding: .8rem 0; text-align: center; }
+
+.lin-actions { display: flex; gap: 6px; margin-bottom: .5rem; flex-wrap: wrap; }
+.lin-actions .btn { font-size: .7rem; padding: .3rem .5rem; }
+
+.lin-status { display: flex; gap: 14px; font-size: .7rem; font-family: var(--font-mono); color: var(--text2); }
+.lin-bus-state { display: flex; align-items: center; gap: 6px; }
+.lin-bus-led { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.lin-bus-led.idle { background: #6b7280; }
+.lin-bus-led.active { background: #10b981; }
+.lin-bus-led.wake { background: #f59e0b; animation: canErrorPulse 0.5s infinite; }
