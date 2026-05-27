@@ -772,6 +772,7 @@ function renderSessions() {
 
 // Message Builder
 let _lastBuilderSid = null;
+let _builderMode = 'uds'; // 'uds' | 'can' | 'lin'
 
 function initBuilder() {
   const select = document.getElementById('builder-sid');
@@ -781,10 +782,43 @@ function initBuilder() {
     opt.textContent = `0x${s.reqSID} - ${s.name} (${s.shortName})`;
     select.appendChild(opt);
   }
+  // Protocol mode switching
+  document.querySelectorAll('.protocol-switcher-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.protocol-switcher-btn').forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+      _builderMode = this.dataset.mode;
+      // Toggle field visibility
+      document.getElementById('uds-fields').style.display = _builderMode === 'uds' ? 'block' : 'none';
+      const canFields = document.getElementById('can-fields');
+      const linFields = document.getElementById('lin-fields');
+      canFields.style.display = _builderMode === 'can' ? 'block' : 'none';
+      canFields.classList.toggle('active', _builderMode === 'can');
+      linFields.style.display = _builderMode === 'lin' ? 'block' : 'none';
+      linFields.classList.toggle('active', _builderMode === 'lin');
+      updateBuilderByMode();
+    });
+  });
+  // LIN role change → update NAD default
+  document.querySelectorAll('input[name="lin-role"]').forEach(rb => {
+    rb.addEventListener('change', function() {
+      if (this.value === 'master') {
+        if (!document.getElementById('lin-nad').value || document.getElementById('lin-nad').value === '02') {
+          document.getElementById('lin-nad').value = '01';
+        }
+      } else {
+        if (!document.getElementById('lin-nad').value || document.getElementById('lin-nad').value === '01') {
+          document.getElementById('lin-nad').value = '02';
+        }
+      }
+      updateBuilderByMode();
+    });
+  });
   updateBuilder();
 }
 
 function updateBuilder() {
+  if (_builderMode !== 'uds') return;
   const sid = parseInt(document.getElementById('builder-sid').value);
   const s = SERVICES.find(x => x.sid === sid);
   if (!s) return;
@@ -843,6 +877,260 @@ function updateBuilder() {
   document.querySelector('.msg-builder-container .byte-display:last-of-type').innerHTML =
     `正响应: ${resBytes.map(b => `<span class="byte sid-byte">${b.toString(16).toUpperCase().padStart(2,'0')}</span>`).join(' ')}<br>` +
     `负响应: <span class="byte" style="border-color:var(--danger);background:#fee2e2">7F</span> <span class="byte" style="border-color:var(--danger);background:#fee2e2">${s.reqSID}</span> <span class="byte" style="border-color:var(--danger);background:#fee2e2">NRC</span>`;
+}
+
+function updateBuilderByMode() {
+  switch (_builderMode) {
+    case 'uds': updateBuilder(); break;
+    case 'can': updateBuilderCAN(); break;
+    case 'lin': updateBuilderLIN(); break;
+  }
+}
+
+function updateBuilderCAN() {
+  const preview = document.getElementById('can-builder-preview');
+  const idStr = document.getElementById('can-builder-id').value.trim();
+  const idFormat = document.querySelector('input[name="can-id-format"]:checked').value;
+  const frameType = document.querySelector('input[name="can-frame-type"]:checked').value;
+
+  const dataInput = document.getElementById('builder-data').value.trim();
+  const dataBytes = [];
+  if (dataInput) {
+    for (const p of dataInput.split(/[\s,]+/)) {
+      if (/^[0-9a-fA-F]{2}$/.test(p)) dataBytes.push(parseInt(p, 16));
+    }
+  }
+
+  const dlc = dataBytes.length > 8 ? 8 : dataBytes.length;
+  const rtr = frameType === 'remote' ? 1 : 0;
+
+  if (!idStr) {
+    preview.innerHTML = '<span style="color:var(--text2)">请输入 CAN ID</span>';
+    return;
+  }
+
+  const idVal = parseInt(idStr, 16);
+  if (isNaN(idVal) || idVal < 0) {
+    preview.innerHTML = '<span style="color:var(--danger)">无效的 CAN ID</span>';
+    return;
+  }
+
+  if (idFormat === '11' && idVal > 0x7FF) {
+    preview.innerHTML = '<span style="color:var(--danger)">11-bit ID 范围: 0x000-0x7FF</span>';
+    return;
+  }
+  if (idFormat === '29' && idVal > 0x1FFFFFFF) {
+    preview.innerHTML = '<span style="color:var(--danger)">29-bit ID 范围: 0x00000000-0x1FFFFFFF</span>';
+    return;
+  }
+
+  let html = '<div class="can-frame-preview">';
+
+  // SOF
+  html += `<div class="can-field sof"><span class="field-label">SOF</span><span class="field-value">0</span></div>`;
+
+  // Arbitration field
+  if (idFormat === '11') {
+    const idBin = idVal.toString(2).padStart(11, '0');
+    html += `<div class="can-field arb"><span class="field-label">ARB(11+RTR)</span><span class="field-value">${idBin} ${rtr}</span></div>`;
+  } else {
+    const idBin = idVal.toString(2).padStart(29, '0');
+    html += `<div class="can-field arb"><span class="field-label">ARB(29+SRR+IDE+RTR)</span><span class="field-value">${idBin.slice(0,8)}...${rtr}</span></div>`;
+  }
+
+  // Control field
+  let ctrlHtml = '';
+  if (idFormat === '11') {
+    ctrlHtml = `IDE=0 r0=0 DLC=${dlc}`;
+  } else {
+    ctrlHtml = `r1=0 r0=0 DLC=${dlc}`;
+  }
+  html += `<div class="can-field ctrl"><span class="field-label">CTRL</span><span class="field-value">${ctrlHtml}</span></div>`;
+
+  // Data field
+  if (dataBytes.length > 0) {
+    const dataHex = dataBytes.map(b => b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
+    html += `<div class="can-field data-field"><span class="field-label">DATA(${dlc}B)</span><span class="field-value">${dataHex}</span></div>`;
+  } else if (frameType === 'remote') {
+    html += `<div class="can-field data-field" style="opacity:.6"><span class="field-label">DATA</span><span class="field-value">(RTR)</span></div>`;
+  } else {
+    html += `<div class="can-field data-field" style="opacity:.6"><span class="field-label">DATA</span><span class="field-value">(空)</span></div>`;
+  }
+
+  // CRC placeholder
+  html += `<div class="can-field crc-field"><span class="field-label">CRC</span><span class="field-value">15-bit</span></div>`;
+
+  // ACK
+  html += `<div class="can-field ack-field"><span class="field-label">ACK</span><span class="field-value">1+1</span></div>`;
+
+  // EOF
+  html += `<div class="can-field eof"><span class="field-label">EOF</span><span class="field-value">7bit</span></div>`;
+
+  html += '</div>';
+
+  // Info line
+  const idStrHex = '0x' + idVal.toString(16).toUpperCase();
+  const totalBits = idFormat === '11' ? (1 + 12 + 6 + dlc*8 + 16 + 2 + 7) : (1 + 32 + 6 + dlc*8 + 16 + 2 + 7);
+  html += `<div class="can-frame-info">`;
+  html += `CAN ID: ${idStrHex} (${idFormat}-bit) | `;
+  html += `帧类型: ${frameType === 'data' ? '数据帧' : '远程帧'} | `;
+  html += `DLC: ${dlc} | 总长度: ${totalBits} bit`;
+  html += `</div>`;
+
+  preview.innerHTML = html;
+}
+
+function updateBuilderLIN() {
+  const preview = document.getElementById('lin-builder-preview');
+  const role = document.querySelector('input[name="lin-role"]:checked').value;
+  const nadStr = document.getElementById('lin-nad').value.trim();
+  const pidStr = document.getElementById('lin-pid').value.trim();
+  const checksumType = document.querySelector('input[name="lin-checksum-type"]:checked').value;
+
+  const dataInput = document.getElementById('builder-data').value.trim();
+  const dataBytes = [];
+  if (dataInput) {
+    for (const p of dataInput.split(/[\s,]+/)) {
+      if (/^[0-9a-fA-F]{2}$/.test(p)) dataBytes.push(parseInt(p, 16));
+    }
+  }
+
+  if (!pidStr) {
+    preview.innerHTML = '<span style="color:var(--text2)">请输入 PID</span>';
+    return;
+  }
+
+  const pidVal = parseInt(pidStr, 16);
+  if (isNaN(pidVal) || pidVal < 0 || pidVal > 0x3F) {
+    preview.innerHTML = '<span style="color:var(--danger)">PID 范围: 0x00-0x3F</span>';
+    return;
+  }
+
+  // PID parity per LIN spec: PID[7:0] = {P1, P0, ID5, ID4, ID3, ID2, ID1, ID0}
+  const id0 = (pidVal >> 0) & 1, id1 = (pidVal >> 1) & 1;
+  const id2 = (pidVal >> 2) & 1, id3 = (pidVal >> 3) & 1;
+  const id4 = (pidVal >> 4) & 1, id5 = (pidVal >> 5) & 1;
+  const p0 = id0 ^ id1 ^ id2 ^ id4;
+  const p1 = (id1 ^ id3 ^ id4 ^ id5) ^ 1;
+  const pidWithParity = (p1 << 7) | (p0 << 6) | pidVal;
+
+  // Checksum calculation
+  let checksumSum = 0;
+  if (checksumType === 'enhanced') checksumSum += pidVal; // PID low 6 bits
+  for (const b of dataBytes) checksumSum += b;
+  const checksum = (0xFF - (checksumSum & 0xFF)) & 0xFF;
+
+  // Build LIN frame preview
+  let html = '<div class="lin-frame-preview">';
+
+  // SynchBreak
+  html += `<div class="lin-field sync-break"><span class="field-label">BREAK</span><span class="field-value">13+ bit</span></div>`;
+
+  // SynchByte
+  html += `<div class="lin-field sync-byte"><span class="field-label">SYNC</span><span class="field-value">0x55</span></div>`;
+
+  // PID with parity
+  const pidHex = pidWithParity.toString(16).toUpperCase().padStart(2, '0');
+  const pidBin = pidWithParity.toString(2).padStart(8, '0');
+  html += `<div class="lin-field pid-field"><span class="field-label">PID=0x${pidHex}</span><span class="field-value">P1=${p1} P0=${p0}</span></div>`;
+
+  // Data bytes
+  if (dataBytes.length > 0) {
+    const dataHex = dataBytes.map(b => b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
+    html += `<div class="lin-field data-field"><span class="field-label">DATA(${dataBytes.length}B)</span><span class="field-value">${dataHex}</span></div>`;
+  } else {
+    html += `<div class="lin-field data-field" style="opacity:.6"><span class="field-label">DATA</span><span class="field-value">(空)</span></div>`;
+  }
+
+  // Checksum
+  const csHex = checksum.toString(16).toUpperCase().padStart(2, '0');
+  const csType = checksumType === 'classic' ? 'Classic' : 'Enhanced';
+  html += `<div class="lin-field checksum-field"><span class="field-label">CHK(${csType})</span><span class="field-value">0x${csHex}</span></div>`;
+
+  html += '</div>';
+
+  // Info line
+  const nadHex = nadStr ? '0x' + nadStr.toUpperCase() : '—';
+  html += `<div class="lin-frame-info">`;
+  html += `角色: ${role === 'master' ? 'Master' : 'Slave'} | `;
+  html += `NAD: ${nadHex} | `;
+  html += `PID(含校验): 0x${pidHex} (${pidBin}) | `;
+  html += `校验和算法: ${csType}(`;
+  html += checksumType === 'classic' ? '仅数据)' : 'PID+数据)';
+  html += `</div>`;
+
+  preview.innerHTML = html;
+}
+
+function copyBuilderHex(mode) {
+  let hexStr = '';
+
+  if (mode === 'can') {
+    const idStr = document.getElementById('can-builder-id').value.trim();
+    const idFormat = document.querySelector('input[name="can-id-format"]:checked').value;
+    const frameType = document.querySelector('input[name="can-frame-type"]:checked').value;
+    const dataInput = document.getElementById('builder-data').value.trim();
+
+    if (!idStr) return;
+    const idVal = parseInt(idStr, 16);
+    if (isNaN(idVal)) return;
+
+    const idHex = idVal.toString(16).toUpperCase().padStart(idFormat === '11' ? 3 : 8, '0');
+    const dlcHex = getDataBytes(dataInput).length.toString(16).toUpperCase();
+    const dataHex = getDataBytes(dataInput).map(b => b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
+    hexStr = `[CAN ${idFormat==='11'?'标准':'扩展'}] ID=0x${idHex} ${frameType==='remote'?'RTR':''} DLC=${parseInt(dlcHex,16)} ${dataHex}`;
+  } else if (mode === 'lin') {
+    const pidStr = document.getElementById('lin-pid').value.trim();
+    const dataInput = document.getElementById('builder-data').value.trim();
+    const checksumType = document.querySelector('input[name="lin-checksum-type"]:checked').value;
+
+    if (!pidStr) return;
+    const pidVal = parseInt(pidStr, 16);
+    if (isNaN(pidVal) || pidVal > 0x3F) return;
+
+    const dataBytes = getDataBytes(dataInput);
+    const id0 = (pidVal >> 0) & 1, id1 = (pidVal >> 1) & 1, id2 = (pidVal >> 2) & 1;
+    const id3 = (pidVal >> 3) & 1, id4 = (pidVal >> 4) & 1, id5 = (pidVal >> 5) & 1;
+    const p0 = id0 ^ id1 ^ id2 ^ id4;
+    const p1 = (id1 ^ id3 ^ id4 ^ id5) ^ 1;
+    const pidWithParity = (p1 << 7) | (p0 << 6) | pidVal;
+
+    let checksumSum = 0;
+    if (checksumType === 'enhanced') checksumSum += pidVal;
+    for (const b of dataBytes) checksumSum += b;
+    const checksum = (0xFF - (checksumSum & 0xFF)) & 0xFF;
+
+    const dataHex = dataBytes.map(b => b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
+    hexStr = `55 ${pidWithParity.toString(16).toUpperCase().padStart(2,'0')} ${dataHex} ${checksum.toString(16).toUpperCase().padStart(2,'0')}`.trim();
+  }
+
+  navigator.clipboard.writeText(hexStr).then(() => {
+    const btns = document.querySelectorAll('.copy-hex-btn');
+    btns.forEach(btn => {
+      btn.textContent = '✅ 已复制!';
+      btn.classList.add('copied');
+      setTimeout(() => {
+        btn.textContent = '📋 复制 HEX';
+        btn.classList.remove('copied');
+      }, 1500);
+    });
+  }).catch(() => {
+    const btns = document.querySelectorAll('.copy-hex-btn');
+    btns.forEach(btn => {
+      btn.textContent = '❌ 复制失败';
+      setTimeout(() => { btn.textContent = '📋 复制 HEX'; }, 1500);
+    });
+  });
+}
+
+function getDataBytes(input) {
+  const bytes = [];
+  if (input) {
+    for (const p of input.split(/[\s,]+/)) {
+      if (/^[0-9a-fA-F]{2}$/.test(p)) bytes.push(parseInt(p, 16));
+    }
+  }
+  return bytes;
 }
 
 // Quiz

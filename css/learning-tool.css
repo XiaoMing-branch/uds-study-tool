@@ -515,3 +515,248 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 .dark .error-tag.crc-err { background: rgba(168,85,247,.15); }
 .dark .error-tag.form-err { background: rgba(59,130,246,.15); }
 .dark .error-tag.ack-err { background: rgba(236,72,153,.15); }
+
+/* ============================================
+   Protocol Mode Switcher (Message Builder)
+   ============================================ */
+.protocol-switcher {
+  display: flex; gap: 0; margin-bottom: 1.2rem;
+  border-radius: 8px; overflow: hidden;
+  border: 2px solid var(--border);
+}
+.protocol-switcher-btn {
+  flex: 1; padding: .6rem 1rem; border: none;
+  background: var(--card); color: var(--text2);
+  font-size: .85rem; font-weight: 600; cursor: pointer;
+  transition: all .2s; text-align: center;
+}
+.protocol-switcher-btn:not(:last-child) {
+  border-right: 1px solid var(--border);
+}
+.protocol-switcher-btn:hover {
+  background: var(--primary-light); color: var(--primary);
+}
+.protocol-switcher-btn.active {
+  background: var(--primary); color: #fff;
+}
+
+/* CAN/LIN fields container */
+#can-fields, #lin-fields { display: none; }
+#can-fields.active, #lin-fields.active { display: block; }
+
+/* Builder radio groups */
+.builder-row input[type="radio"] { margin-right: 4px; }
+.builder-row label { display: inline-flex; align-items: center; gap: 4px; margin-right: 12px; font-weight: 400; font-size: .85rem; }
+
+/* CAN Frame Preview */
+.can-frame-preview {
+  display: flex; flex-wrap: wrap; gap: 3px; align-items: stretch;
+  margin: .5rem 0; font-family: monospace;
+}
+.can-field {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 6px 8px; border-radius: 6px;
+  color: #fff; font-weight: 600; font-size: .7rem; gap: 2px;
+  min-width: 36px;
+}
+.can-field .field-label { font-size: .55rem; opacity: .85; text-transform: uppercase; }
+.can-field .field-value { font-size: .65rem; font-family: monospace; }
+.can-field.sof { background: #ef4444; }
+.can-field.arb { background: #3b82f6; }
+.can-field.ctrl { background: #f59e0b; color: #1a1a2e; }
+.can-field.data-field { background: #10b981; }
+.can-field.crc-field { background: #a855f7; }
+.can-field.ack-field { background: #ec4899; }
+.can-field.eof { background: #6b7280; }
+.can-frame-info {
+  font-size: .78rem; color: var(--text2); margin-top: .5rem;
+  font-family: monospace; line-height: 1.6;
+}
+
+/* LIN Frame Preview */
+.lin-frame-preview {
+  display: flex; flex-wrap: wrap; gap: 3px; align-items: stretch;
+  margin: .5rem 0; font-family: monospace;
+}
+.lin-field {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 6px 8px; border-radius: 6px;
+  color: #fff; font-weight: 600; font-size: .7rem; gap: 2px;
+  min-width: 36px;
+}
+.lin-field .field-label { font-size: .55rem; opacity: .85; text-transform: uppercase; }
+.lin-field .field-value { font-size: .65rem; font-family: monospace; }
+.lin-field.sync-break { background: #ef4444; }
+.lin-field.sync-byte { background: #3b82f6; }
+.lin-field.pid-field { background: #f59e0b; color: #1a1a2e; }
+.lin-field.data-field { background: #10b981; }
+.lin-field.checksum-field { background: #a855f7; }
+.lin-frame-info {
+  font-size: .78rem; color: var(--text2); margin-top: .5rem;
+  font-family: monospace; line-height: 1.6;
+}
+
+/* Copy HEX button */
+.copy-hex-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: .5rem 1.2rem; margin-top: .8rem;
+  border: 2px solid var(--border); border-radius: 8px;
+  background: var(--card); color: var(--text);
+  font-size: .85rem; font-weight: 600; cursor: pointer;
+  transition: all .2s;
+}
+.copy-hex-btn:hover {
+  border-color: var(--primary); background: var(--primary-light); color: var(--primary);
+}
+.copy-hex-btn.copied {
+  border-color: var(--success); background: #d1fae5; color: #065f46;
+}
+.dark .copy-hex-btn.copied {
+  background: #064e3b; color: #6ee7b7;
+}
+
+/* Placeholder byte */
+.byte-display .byte.placeholder {
+  border-color: #94a3b8; background: #f1f5f9; color: #94a3b8;
+  font-style: italic;
+}
+.dark .byte-display .byte.placeholder {
+  background: #1e293b; border-color: #475569; color: #64748b;
+}
+
+/* ======================== */
+/* Protocol Mode Switcher   */
+/* ======================== */
+.protocol-switcher {
+  display: flex; gap: 0; margin-bottom: 1.2rem;
+  border-radius: 8px; overflow: hidden;
+  border: 2px solid var(--border);
+}
+.protocol-switcher-btn {
+  flex: 1; padding: .6rem 1rem; border: none;
+  background: var(--card); color: var(--text2);
+  font-size: .85rem; font-weight: 600; cursor: pointer;
+  transition: all .2s; text-align: center;
+}
+.protocol-switcher-btn:not(:last-child) {
+  border-right: 1px solid var(--border);
+}
+.protocol-switcher-btn:hover {
+  background: var(--primary-light); color: var(--primary);
+}
+.protocol-switcher-btn.active {
+  background: var(--primary); color: #fff;
+}
+.dark .protocol-switcher-btn.active {
+  background: var(--primary);
+}
+
+/* CAN/LIN fields container */
+#can-fields, #lin-fields {
+  display: none;
+}
+#can-fields.active, #lin-fields.active {
+  display: block;
+}
+
+/* Radio button group styling */
+.builder-row label input[type="radio"] {
+  margin-right: 4px;
+}
+.builder-row label {
+  display: inline-flex; align-items: center;
+  gap: 4px; margin-right: 12px;
+  font-weight: 400; font-size: .85rem;
+}
+
+/* CAN Frame Preview - color coded fields */
+.can-frame-preview {
+  display: flex; flex-wrap: wrap; gap: 3px; align-items: stretch;
+  margin: .5rem 0; font-family: monospace;
+}
+.can-field {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 6px 8px; border-radius: 6px;
+  color: #fff; font-weight: 600; font-size: .7rem; gap: 2px;
+  min-width: 36px;
+}
+.can-field .field-label { font-size: .55rem; opacity: .85; text-transform: uppercase; }
+.can-field .field-value { font-size: .65rem; font-family: monospace; }
+.can-field.sof { background: #ef4444; }
+.can-field.arb { background: #3b82f6; }
+.can-field.ctrl { background: #f59e0b; color: #1a1a2e; }
+.can-field.data-field { background: #10b981; }
+.can-field.crc-field { background: #a855f7; }
+.can-field.ack-field { background: #ec4899; }
+.can-field.eof { background: #6b7280; }
+
+/* CAN frame info line */
+.can-frame-info {
+  font-size: .78rem; color: var(--text2); margin-top: .5rem;
+  font-family: monospace; line-height: 1.6;
+}
+
+/* LIN Frame Preview */
+.lin-frame-preview {
+  display: flex; flex-wrap: wrap; gap: 3px; align-items: stretch;
+  margin: .5rem 0; font-family: monospace;
+}
+.lin-field {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 6px 8px; border-radius: 6px;
+  color: #fff; font-weight: 600; font-size: .7rem; gap: 2px;
+  min-width: 36px;
+}
+.lin-field .field-label { font-size: .55rem; opacity: .85; text-transform: uppercase; }
+.lin-field .field-value { font-size: .65rem; font-family: monospace; }
+.lin-field.sync-break { background: #ef4444; }
+.lin-field.sync-byte { background: #3b82f6; }
+.lin-field.pid-field { background: #f59e0b; color: #1a1a2e; }
+.lin-field.data-field { background: #10b981; }
+.lin-field.checksum-field { background: #a855f7; }
+
+/* LIN frame info line */
+.lin-frame-info {
+  font-size: .78rem; color: var(--text2); margin-top: .5rem;
+  font-family: monospace; line-height: 1.6;
+}
+
+/* Copy HEX button */
+.copy-hex-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: .5rem 1.2rem; margin-top: .8rem;
+  border: 2px solid var(--border); border-radius: 8px;
+  background: var(--card); color: var(--text);
+  font-size: .85rem; font-weight: 600; cursor: pointer;
+  transition: all .2s;
+}
+.copy-hex-btn:hover {
+  border-color: var(--primary); background: var(--primary-light); color: var(--primary);
+}
+.copy-hex-btn:active {
+  transform: translateY(0);
+}
+.copy-hex-btn.copied {
+  border-color: var(--success); background: #d1fae5; color: #065f46;
+}
+.dark .copy-hex-btn.copied {
+  background: #064e3b; color: #6ee7b7;
+}
+
+/* Data field inside byte-display (reused by CAN/LIN) */
+.byte-display .byte.placeholder {
+  border-color: #94a3b8; background: #f1f5f9; color: #94a3b8;
+  font-style: italic;
+}
+.dark .byte-display .byte.placeholder {
+  background: #1e293b; border-color: #475569; color: #64748b;
+}
+
+/* Warning text */
+.builder-warning {
+  font-size: .78rem; color: var(--danger); margin-top: 4px;
+  display: none;
+}
+.builder-warning.show {
+  display: block;
+}

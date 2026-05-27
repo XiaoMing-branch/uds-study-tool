@@ -104,28 +104,90 @@
       <h2 class="section-title">🧱 UDS 消息构造器</h2>
       <p class="section-subtitle">交互式构建诊断请求/响应消息</p>
       <div class="msg-builder-container">
-        <div class="builder-row">
-          <label>服务 (SID):</label>
-          <select id="builder-sid" onchange="updateBuilder()"></select>
+        <!-- Protocol mode selector -->
+        <div class="protocol-switcher">
+          <button class="protocol-switcher-btn active" data-mode="uds">UDS 协议</button>
+          <button class="protocol-switcher-btn" data-mode="can">CAN 总线</button>
+          <button class="protocol-switcher-btn" data-mode="lin">LIN 总线</button>
         </div>
-        <div class="builder-row" id="builder-subfunc-row">
-          <label>子功能:</label>
-          <select id="builder-subfunc" onchange="updateBuilder()"></select>
+
+        <!-- UDS protocol fields -->
+        <div id="uds-fields">
+          <div class="builder-row">
+            <label>服务 (SID):</label>
+            <select id="builder-sid" onchange="updateBuilder()"></select>
+          </div>
+          <div class="builder-row" id="builder-subfunc-row">
+            <label>子功能:</label>
+            <select id="builder-subfunc" onchange="updateBuilder()"></select>
+          </div>
+          <div class="builder-row">
+            <label>数据字节 (HEX):</label>
+            <input type="text" id="builder-data" placeholder="如: F1 90 01" value="" oninput="updateBuilder()">
+          </div>
+          <div class="builder-row" style="margin-top:1rem">
+            <label>请求消息:</label>
+            <div class="byte-display" id="builder-request"></div>
+          </div>
+          <div class="builder-row">
+            <label>响应 SID:</label>
+            <div class="byte-display" id="builder-response"></div>
+          </div>
+          <div style="margin-top:1rem;font-size:.85rem;color:var(--text2)">
+            <strong>说明:</strong> 请求 = SID + [子功能] + [数据]；正响应 = SID+0x40 + [子功能] + [数据]；负响应 = 0x7F + SID + NRC
+          </div>
         </div>
-        <div class="builder-row">
-          <label>数据字节 (HEX):</label>
-          <input type="text" id="builder-data" placeholder="如: F1 90 01" value="" oninput="updateBuilder()">
+
+        <!-- CAN bus fields (hidden by default) -->
+        <div id="can-fields" style="display:none">
+          <div class="builder-row">
+            <label>CAN ID (HEX):</label>
+            <input type="text" id="can-builder-id" placeholder="如: 7E0" oninput="updateBuilderByMode()">
+          </div>
+          <div class="builder-row">
+            <label>ID 格式:</label>
+            <label><input type="radio" name="can-id-format" value="11" checked onchange="updateBuilderByMode()"> 11-bit (标准)</label>
+            <label><input type="radio" name="can-id-format" value="29" onchange="updateBuilderByMode()"> 29-bit (扩展)</label>
+          </div>
+          <div class="builder-row">
+            <label>帧类型:</label>
+            <label><input type="radio" name="can-frame-type" value="data" checked onchange="updateBuilderByMode()"> 数据帧</label>
+            <label><input type="radio" name="can-frame-type" value="remote" onchange="updateBuilderByMode()"> 远程帧</label>
+          </div>
+          <div class="builder-row">
+            <div id="can-builder-preview" class="byte-display">CAN 帧预览 — 输入 ID 和数据后显示</div>
+          </div>
+          <div class="builder-row">
+            <button class="copy-hex-btn" onclick="copyBuilderHex('can')">📋 复制 HEX</button>
+          </div>
         </div>
-        <div class="builder-row" style="margin-top:1rem">
-          <label>请求消息:</label>
-          <div class="byte-display" id="builder-request"></div>
-        </div>
-        <div class="builder-row">
-          <label>响应 SID:</label>
-          <div class="byte-display" id="builder-response"></div>
-        </div>
-        <div style="margin-top:1rem;font-size:.85rem;color:var(--text2)">
-          <strong>说明:</strong> 请求 = SID + [子功能] + [数据]；正响应 = SID+0x40 + [子功能] + [数据]；负响应 = 0x7F + SID + NRC
+
+        <!-- LIN bus fields (hidden by default) -->
+        <div id="lin-fields" style="display:none">
+          <div class="builder-row">
+            <label>角色:</label>
+            <label><input type="radio" name="lin-role" value="master" checked onchange="updateBuilderByMode()"> Master</label>
+            <label><input type="radio" name="lin-role" value="slave" onchange="updateBuilderByMode()"> Slave</label>
+          </div>
+          <div class="builder-row">
+            <label>NAD (HEX):</label>
+            <input type="text" id="lin-nad" placeholder="如: 01" value="01" oninput="updateBuilderByMode()">
+          </div>
+          <div class="builder-row">
+            <label>PID (HEX 00-3F):</label>
+            <input type="text" id="lin-pid" placeholder="如: 10" oninput="updateBuilderByMode()">
+          </div>
+          <div class="builder-row">
+            <label>校验和:</label>
+            <label><input type="radio" name="lin-checksum-type" value="classic" onchange="updateBuilderByMode()"> 经典(Classic)</label>
+            <label><input type="radio" name="lin-checksum-type" value="enhanced" checked onchange="updateBuilderByMode()"> 增强(Enhanced)</label>
+          </div>
+          <div class="builder-row">
+            <div id="lin-builder-preview" class="byte-display">LIN 帧预览 — 输入 NAD/PID 和数据后显示</div>
+          </div>
+          <div class="builder-row">
+            <button class="copy-hex-btn" onclick="copyBuilderHex('lin')">📋 复制 HEX</button>
+          </div>
         </div>
       </div>
     </div>
