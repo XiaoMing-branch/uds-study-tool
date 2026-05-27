@@ -111,19 +111,21 @@
           <button class="protocol-switcher-btn" data-mode="lin">LIN 总线</button>
         </div>
 
+        <!-- Shared UDS service selector (visible in all modes) -->
+        <div class="builder-row">
+          <label>服务 (SID):</label>
+          <select id="builder-sid" onchange="updateBuilderByMode()"></select>
+        </div>
+        <div class="builder-row" id="builder-subfunc-row">
+          <label>子功能:</label>
+          <select id="builder-subfunc" onchange="updateBuilderByMode()"></select>
+        </div>
+
         <!-- UDS protocol fields -->
         <div id="uds-fields">
           <div class="builder-row">
-            <label>服务 (SID):</label>
-            <select id="builder-sid" onchange="updateBuilder()"></select>
-          </div>
-          <div class="builder-row" id="builder-subfunc-row">
-            <label>子功能:</label>
-            <select id="builder-subfunc" onchange="updateBuilder()"></select>
-          </div>
-          <div class="builder-row">
             <label>数据字节 (HEX):</label>
-            <input type="text" id="builder-data" placeholder="如: F1 90 01" value="" oninput="updateBuilder()">
+            <input type="text" id="uds-data" placeholder="如: F1 90 01 (SID 后的附加参数)" value="" oninput="updateBuilderByMode()">
           </div>
           <div class="builder-row" style="margin-top:1rem">
             <label>请求消息:</label>
@@ -155,7 +157,11 @@
             <label><input type="radio" name="can-frame-type" value="remote" onchange="updateBuilderByMode()"> 远程帧</label>
           </div>
           <div class="builder-row">
-            <div id="can-builder-preview" class="byte-display">CAN 帧预览 — 输入 ID 和数据后显示</div>
+            <label>附加数据 (HEX):</label>
+            <input type="text" id="can-data" placeholder="SID/子功能之外的数据 (如 DID)" value="" oninput="updateBuilderByMode()">
+          </div>
+          <div class="builder-row">
+            <div id="can-builder-preview" class="byte-display">CAN 帧预览 — 选择 SID + 配置 CAN 参数</div>
           </div>
           <div class="builder-row">
             <button class="copy-hex-btn" onclick="copyBuilderHex('can')">📋 复制 HEX</button>
@@ -172,6 +178,11 @@
           <div class="builder-row">
             <label>NAD (HEX):</label>
             <input type="text" id="lin-nad" placeholder="如: 01" value="01" oninput="updateBuilderByMode()">
+            <span style="font-size:.7rem;color:var(--text2)">00-7F (00=广播, 01-7E=物理, 7F=功能)</span>
+          </div>
+          <div class="builder-row">
+            <label>附加数据 (HEX):</label>
+            <input type="text" id="lin-data" placeholder="SID/子功能之外的数据 (如 DID)" value="" oninput="updateBuilderByMode()" style="flex:1">
           </div>
           <div class="builder-row">
             <label>诊断 PID:</label>
@@ -179,11 +190,10 @@
           </div>
           <div class="builder-row">
             <label>校验和:</label>
-            <label><input type="radio" name="lin-checksum-type" value="classic" onchange="updateBuilderByMode()"> 经典(Classic)</label>
-            <label><input type="radio" name="lin-checksum-type" value="enhanced" checked onchange="updateBuilderByMode()"> 增强(Enhanced)</label>
+            <span id="lin-checksum-display" style="font-family:monospace;font-weight:600;color:var(--primary);padding:.5rem 0">经典(Classic) — 诊断帧 0x3C/0x3D 固定</span>
           </div>
           <div class="builder-row">
-            <div id="lin-builder-preview" class="byte-display">LIN 帧预览 — 输入 NAD/PID 和数据后显示</div>
+            <div id="lin-builder-preview" class="byte-display">LIN 帧预览 — 选择 SID + 配置 LIN 参数</div>
           </div>
           <div class="builder-row">
             <button class="copy-hex-btn" onclick="copyBuilderHex('lin')">📋 复制 HEX</button>

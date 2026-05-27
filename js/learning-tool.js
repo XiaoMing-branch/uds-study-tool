@@ -22,7 +22,7 @@ const UNIT_COLORS = {
 };
 
 const SERVICES = [
-  { sid: 0x10, name: 'DiagnosticSessionControl', shortName: 'DSC', unit: 'diagnostic-communication', reqSID: '10', resSID: '50',
+  { sid: 0x10, name: 'DiagnosticSessionControl', cn: '诊断会话控制', shortName: 'DSC', unit: 'diagnostic-communication', reqSID: '10', resSID: '50',
     desc: '用于在服务器中启用不同的诊断会话。每个会话定义了一组支持的诊断服务和/或访问权限。',
     subfuncs: [
       { val: '01', name: 'defaultSession', desc: '默认会话 — 基本诊断功能' },
@@ -33,9 +33,9 @@ const SERVICES = [
     ],
     reqFmt: '10 + sessionType (1 byte)',
     resFmt: '50 + sessionType + P2* (2 bytes) + P2*_ext (2 bytes)',
-    nrcs: ['13', '22', '31', '33', '7E', '7F'],
+    nrcs: ['12', '13', '22', '31', '33', '7E', '7F'],
     detail: '服务用于在服务器中切换不同的诊断会话。会话类型决定了服务器支持哪些服务。进入非默认会话通常需要安全访问。P2* 和 P2*_ext 分别表示服务器在非默认会话下的响应时间和扩展响应时间。' },
-  { sid: 0x11, name: 'ECUReset', shortName: 'ER', unit: 'diagnostic-communication', reqSID: '11', resSID: '51',
+  { sid: 0x11, name: 'ECUReset', cn: 'ECU复位', shortName: 'ER', unit: 'diagnostic-communication', reqSID: '11', resSID: '51',
     desc: '强制服务器执行复位操作。复位后服务器返回到 defaultSession。',
     subfuncs: [
       { val: '01', name: 'hardReset', desc: '硬复位 — 模拟电源重启' },
@@ -48,13 +48,13 @@ const SERVICES = [
     resFmt: '51 + resetType + [powerDownTime]',
     nrcs: ['12', '13', '22', '33', '37', '7E', '7F'],
     detail: '复位服务可用于多种场景。hardReset 和 keyOffOnReset 后服务器通常需要重新初始化。softReset 保持电源但重启软件。enableRapidPowerShutdown 允许服务器在特定条件下进入低功耗模式。' },
-  { sid: 0x14, name: 'ClearDiagnosticInformation', shortName: 'CDI', unit: 'stored-data', reqSID: '14', resSID: '54',
+  { sid: 0x14, name: 'ClearDiagnosticInformation', cn: '清除诊断信息', shortName: 'CDI', unit: 'stored-data', reqSID: '14', resSID: '54',
     desc: '清除服务器中存储的诊断信息（DTC 状态位、快照数据、扩展数据等）。',
     reqFmt: '14 + groupOfDTC (3 bytes)',
     resFmt: '54',
     nrcs: ['13', '22', '31', '33', '72', '7F'],
     detail: 'groupOfDTC 参数为 3 字节，高字节是 DTC 掩码，低 2 字节是 DTC 编号。值为 0xFFFFFF 表示清除所有 DTC。' },
-  { sid: 0x19, name: 'ReadDTCInformation', shortName: 'RDTCI', unit: 'stored-data', reqSID: '19', resSID: '59',
+  { sid: 0x19, name: 'ReadDTCInformation', cn: '读取DTC信息', shortName: 'RDTCI', unit: 'stored-data', reqSID: '19', resSID: '59',
     desc: '读取 DTC 信息。报告类型决定返回的具体 DTC 数据（状态、快照、扩展数据等）。',
     subfuncs: [
       { val: '01', name: 'reportNumberOfDTCByStatusMask', desc: '按状态掩码报告 DTC 数量' },
@@ -75,27 +75,27 @@ const SERVICES = [
     ],
     reqFmt: '19 + reportType (1 byte) + [data]',
     resFmt: '59 + [data]',
-    nrcs: ['13', '22', '31', '33', '7E', '7F'],
+    nrcs: ['12', '13', '22', '31', '33', '7E', '7F'],
     detail: 'ReadDTCInformation 是最复杂的 UDS 服务之一，支持 20+ 种子功能（reportType）。用于读取 DTC 状态、快照、扩展数据、严重性信息等。reportType 取值范围 0x00-0xFF，其中 0x01-0x0F 为标准化报告类型。' },
-  { sid: 0x22, name: 'ReadDataByIdentifier', shortName: 'RDBI', unit: 'data-transmission', reqSID: '22', resSID: '62',
+  { sid: 0x22, name: 'ReadDataByIdentifier', cn: '通过标识符读取数据', shortName: 'RDBI', unit: 'data-transmission', reqSID: '22', resSID: '62',
     desc: '通过数据标识符 (DID) 读取 ECU 中当前的数据值。DID 为 2 字节。',
     reqFmt: '22 + DID (2 bytes) [可以多 DID 请求]',
     resFmt: '62 + DID + data',
     nrcs: ['13', '22', '31', '33', '7F'],
     detail: '最常用的诊断服务之一。DID (Data Identifier) 为 2 字节值，范围 0x0000-0xFFFF。标准定义了一些 DID 范围，如 0xF000-0xF0FF 用于网络/通信数据等。可在一条消息中请求多个 DID。' },
-  { sid: 0x23, name: 'ReadMemoryByAddress', shortName: 'RMBA', unit: 'data-transmission', reqSID: '23', resSID: '63',
+  { sid: 0x23, name: 'ReadMemoryByAddress', cn: '通过地址读取内存', shortName: 'RMBA', unit: 'data-transmission', reqSID: '23', resSID: '63',
     desc: '按内存地址读取服务器内存中的数据。需要指定地址和长度格式。',
     reqFmt: '23 + addressAndLengthFormat (1 byte) + memoryAddress (N bytes) + memorySize (N bytes)',
     resFmt: '63 + dataRecord',
     nrcs: ['13', '22', '31', '33', '7F'],
     detail: 'addressAndLengthFormat 的低 4 位表示地址字节数，高 4 位表示长度字节数。典型的 32 位地址格式：addressAndLengthFormat=0x44。' },
-  { sid: 0x24, name: 'ReadScalingDataByIdentifier', shortName: 'RSDBI', unit: 'data-transmission', reqSID: '24', resSID: '64',
+  { sid: 0x24, name: 'ReadScalingDataByIdentifier', cn: '通过标识符读取缩放数据', shortName: 'RSDBI', unit: 'data-transmission', reqSID: '24', resSID: '64',
     desc: '读取 DID 的缩放数据（单位、换算公式、范围等）。',
     reqFmt: '24 + DID (2 bytes)',
     resFmt: '64 + DID + scalingData',
     nrcs: ['13', '22', '31', '33', '7F'],
     detail: '缩放数据包括：1 byte 单位长度 + 单位 + 公式类型 + 公式数据（分子、分母、偏移量等）。用于获取传感器数据的换算信息。' },
-  { sid: 0x27, name: 'SecurityAccess', shortName: 'SA', unit: 'diagnostic-communication', reqSID: '27', resSID: '67',
+  { sid: 0x27, name: 'SecurityAccess', cn: '安全访问', shortName: 'SA', unit: 'diagnostic-communication', reqSID: '27', resSID: '67',
     desc: '提供访问服务器安全相关功能的方法。使用种子-密钥机制解锁受保护的功能。',
     subfuncs: [
       { val: '01', name: 'requestSeed (level 1)', desc: '请求种子 — 安全级别 1' },
@@ -107,9 +107,9 @@ const SERVICES = [
     ],
     reqFmt: '27 + subFunction (requestSeed/sendKey) + [data]',
     resFmt: '67 + subFunction + [seed/key data]',
-    nrcs: ['13', '22', '24', '31', '35', '36', '37', '7E', '7F'],
+    nrcs: ['12', '13', '22', '24', '31', '35', '36', '37', '7E', '7F'],
     detail: '典型的种子-密钥流程：客户端请求种子 → 服务器返回种子 → 客户端计算密钥并发送 → 服务器验证。连续失败的解锁尝试次数超过限制时返回 NRC 0x36。' },
-  { sid: 0x28, name: 'CommunicationControl', shortName: 'CC', unit: 'diagnostic-communication', reqSID: '28', resSID: '68',
+  { sid: 0x28, name: 'CommunicationControl', cn: '通信控制', shortName: 'CC', unit: 'diagnostic-communication', reqSID: '28', resSID: '68',
     desc: '控制服务器的通信行为（启用/禁用消息发送和接收）。',
     subfuncs: [
       { val: '00', name: 'enableRxAndTx', desc: '启用接收和发送' },
@@ -121,7 +121,7 @@ const SERVICES = [
     resFmt: '68 + subFunction',
     nrcs: ['12', '13', '22', '31', '33', '7E', '7F'],
     detail: 'communicationType 是位编码字节，bit0=normalCommunication, bit1=networkManagement, bit2-7 定义子网。适用于网关/多网络环境。' },
-  { sid: 0x29, name: 'Authentication', shortName: 'Auth', unit: 'diagnostic-communication', reqSID: '29', resSID: '69',
+  { sid: 0x29, name: 'Authentication', cn: '认证', shortName: 'Auth', unit: 'diagnostic-communication', reqSID: '29', resSID: '69',
     desc: '基于 PKI 证书或挑战-应答机制的身份认证服务。ISO 14229-1:2020 新增。',
     reqFmt: '29 + subFunction + [authenticationData]',
     resFmt: '69 + subFunction + [data]',
@@ -137,19 +137,19 @@ const SERVICES = [
       { val: '09-7E', name: 'ISOSAEReserved / vehicleManufacturerSpecific', desc: '保留或制造商特定子功能' },
       { val: '7F', name: 'ISOSAEReserved', desc: '保留' },
     ],
-    nrcs: ['13', '22', '24', '31', '33', '34', '37', '38', '39', '3A', '50-5D', '7E', '7F'],
+    nrcs: ['12', '13', '22', '24', '31', '33', '34', '37', '38', '39', '3A', '50-5D', '7E', '7F'],
     detail: '2020 版新增的安全认证服务。支持 PKI 证书交换模式(APCE) 和挑战-应答(ACR) 两种认证流程。' +
       'APCE 四步流程: deAuthenticate→getCertificateRequest→sendCertificate→getAuthenticationResult。' +
       'ACR 三步流程: deAuthenticate→getChallengeRequest→sendChallengeResponse→getAuthenticationResult。' +
       '增加 NRC 0x37(authenticationRequired)，认证未完成时返回。' +
       '使用 authenticatedUserCertificates 参数可指定证书身份。' },
-  { sid: 0x2A, name: 'ReadDataByPeriodicIdentifier', shortName: 'RDBPI', unit: 'data-transmission', reqSID: '2A', resSID: '6A',
+  { sid: 0x2A, name: 'ReadDataByPeriodicIdentifier', cn: '通过周期标识符读取数据', shortName: 'RDBPI', unit: 'data-transmission', reqSID: '2A', resSID: '6A',
     desc: '按周期标识符读取数据。服务器按预定义的周期性数据标识符持续发送数据。',
     reqFmt: '2A + periodicDataIdentifier (1 byte)',
     resFmt: '6A + periodicDataIdentifier + data',
     nrcs: ['13', '22', '31', '33', '7F'],
     detail: '不同于 ReadDataByIdentifier 的一次性读取，此服务让服务器周期性发送指定数据，减少总线负载。periodicDataIdentifier 为 1 字节。' },
-  { sid: 0x2C, name: 'DynamicallyDefineDataIdentifier', shortName: 'DDDI', unit: 'data-transmission', reqSID: '2C', resSID: '6C',
+  { sid: 0x2C, name: 'DynamicallyDefineDataIdentifier', cn: '动态定义数据标识符', shortName: 'DDDI', unit: 'data-transmission', reqSID: '2C', resSID: '6C',
     desc: '动态定义数据标识符，将多个现有 DID 或内存地址组合成一个新的虚拟 DID。',
     subfuncs: [
       { val: '01', name: 'defineByIdentifier', desc: '通过标识符定义数据' },
@@ -158,15 +158,15 @@ const SERVICES = [
     ],
     reqFmt: '2C + definitionMode (1 byte) + [definitionData]',
     resFmt: '6C + [dynamicallyDefinedDID]',
-    nrcs: ['13', '22', '31', '33', '7E', '7F'],
+    nrcs: ['12', '13', '22', '31', '33', '7E', '7F'],
     detail: '允许客户端灵活组合多个数据源为一个 DID。使用 0x2C 读/写此动态 DID 时相当于同时访问多个数据。动态 DID 在非默认会话中可用。' },
-  { sid: 0x2E, name: 'WriteDataByIdentifier', shortName: 'WDBI', unit: 'data-transmission', reqSID: '2E', resSID: '6E',
+  { sid: 0x2E, name: 'WriteDataByIdentifier', cn: '通过标识符写入数据', shortName: 'WDBI', unit: 'data-transmission', reqSID: '2E', resSID: '6E',
     desc: '按 DID 向 ECU 写入数据。用于修改配置参数、标定数据等。',
     reqFmt: '2E + DID (2 bytes) + dataRecord',
     resFmt: '6E + DID',
     nrcs: ['13', '22', '31', '33', '72', '7F'],
     detail: '写入的数据长度需与 DID 定义长度一致。通常需要在非默认会话中且有安全访问权限才能写入。' },
-  { sid: 0x2F, name: 'InputOutputControlByIdentifier', shortName: 'IOCBI', unit: 'io-control', reqSID: '2F', resSID: '6F',
+  { sid: 0x2F, name: 'InputOutputControlByIdentifier', cn: '通过标识符输入输出控制', shortName: 'IOCBI', unit: 'io-control', reqSID: '2F', resSID: '6F',
     desc: '通过 DID 控制 ECU 的输入输出信号（如驱动执行器、覆盖传感器值）。',
     subfuncs: [
       { val: '00', name: 'returnControlToECU', desc: '将控制权交还 ECU' },
@@ -176,9 +176,9 @@ const SERVICES = [
     ],
     reqFmt: '2F + DID (2 bytes) + controlOption + [controlState]',
     resFmt: '6F + DID + controlOption + [controlState]',
-    nrcs: ['13', '22', '31', '33', '7E', '7F'],
+    nrcs: ['12', '13', '22', '31', '33', '7E', '7F'],
     detail: '用于执行器测试和诊断。可对指定 IO 执行不同操作：shortTermAdjustment 允许临时改变输出值；freezeCurrentState 固定当前输出。' },
-  { sid: 0x31, name: 'RoutineControl', shortName: 'RC', unit: 'routine', reqSID: '31', resSID: '71',
+  { sid: 0x31, name: 'RoutineControl', cn: '例行程序控制', shortName: 'RC', unit: 'routine', reqSID: '31', resSID: '71',
     desc: '启动、停止 ECU 内部的例行程序或获取程序运行结果。用于擦除/编程内存、校验等。',
     subfuncs: [
       { val: '01', name: 'startRoutine', desc: '启动例行程序' },
@@ -187,33 +187,33 @@ const SERVICES = [
     ],
     reqFmt: '31 + routineControlType + routineIdentifier (2 bytes) + [data]',
     resFmt: '71 + routineControlType + routineIdentifier + [data]',
-    nrcs: ['13', '22', '24', '31', '33', '72', '7E', '7F'],
+    nrcs: ['12', '13', '22', '24', '31', '33', '72', '7E', '7F'],
     detail: 'routineIdentifier 为 2 字节值。标准定义了 FF00 擦除内存、FF01 编程内存、FF02 校验等常用例程。startRoutine 触发程序执行，stopRoutine 中止执行。' },
-  { sid: 0x34, name: 'RequestDownload', shortName: 'RD', unit: 'upload-download', reqSID: '34', resSID: '74',
+  { sid: 0x34, name: 'RequestDownload', cn: '请求下载', shortName: 'RD', unit: 'upload-download', reqSID: '34', resSID: '74',
     desc: '请求服务器准备接收下载数据。初始化内存写入操作。',
     reqFmt: '34 + dataFormatIdentifier + addressAndLengthFormat + memoryAddress + memorySize',
     resFmt: '74 + [maxNumberOfBlockLength] + [data]',
     nrcs: ['13', '22', '31', '33', '70', '72', '7F'],
     detail: '配合 TransferData (0x36) 和 RequestTransferExit (0x37) 完成数据下载。dataFormatIdentifier 低 4 位为压缩方法，高 4 位为加密方法。' },
-  { sid: 0x35, name: 'RequestUpload', shortName: 'RU', unit: 'upload-download', reqSID: '35', resSID: '75',
+  { sid: 0x35, name: 'RequestUpload', cn: '请求上传', shortName: 'RU', unit: 'upload-download', reqSID: '35', resSID: '75',
     desc: '请求服务器准备传输数据。初始化内存读取操作。',
     reqFmt: '35 + dataFormatIdentifier + addressAndLengthFormat + memoryAddress + memorySize',
     resFmt: '75 + [maxNumberOfBlockLength]',
     nrcs: ['13', '22', '31', '33', '70', '72', '7F'],
     detail: '与 RequestDownload 对称，用于从 ECU 读取数据。配合 TransferData 和 RequestTransferExit 完成上传。' },
-  { sid: 0x36, name: 'TransferData', shortName: 'TD', unit: 'upload-download', reqSID: '36', resSID: '76',
+  { sid: 0x36, name: 'TransferData', cn: '传输数据', shortName: 'TD', unit: 'upload-download', reqSID: '36', resSID: '76',
     desc: '在上传/下载操作中传输数据块。包含块序列计数器以确保数据顺序。',
     reqFmt: '36 + blockSequenceCounter (1 byte) + [data]',
     resFmt: '76 + blockSequenceCounter + [data]',
     nrcs: ['13', '22', '31', '33', '70', '71', '72', '73', '7F'],
     detail: 'blockSequenceCounter 从 0x01 开始递增（不是 0x00）。重传相同序列号的数据包应被接受（防止 ACK 丢失）。NRC 0x73 表示序列号错误。' },
-  { sid: 0x37, name: 'RequestTransferExit', shortName: 'RTE', unit: 'upload-download', reqSID: '37', resSID: '77',
+  { sid: 0x37, name: 'RequestTransferExit', cn: '请求传输退出', shortName: 'RTE', unit: 'upload-download', reqSID: '37', resSID: '77',
     desc: '请求结束上传/下载传输序列。',
     reqFmt: '37 + [data]',
     resFmt: '77 + [data]',
     nrcs: ['13', '22', '24', '31', '33', '71', '72', '7F'],
     detail: '传输结束时的清理操作。可携带额外数据（如校验和）。需要在 TransferData 序列之后调用。' },
-  { sid: 0x38, name: 'RequestFileTransfer', shortName: 'RFT', unit: 'upload-download', reqSID: '38', resSID: '78',
+  { sid: 0x38, name: 'RequestFileTransfer', cn: '请求文件传输', shortName: 'RFT', unit: 'upload-download', reqSID: '38', resSID: '78',
     desc: '请求在客户端和服务器之间传输文件。支持文件目录列表。',
     subfuncs: [
       { val: '01', name: 'addFile', desc: '添加文件到服务器' },
@@ -224,15 +224,15 @@ const SERVICES = [
     ],
     reqFmt: '38 + subFunction + filePathAndName + [data]',
     resFmt: '78 + subFunction + [data]',
-    nrcs: ['13', '22', '24', '31', '33', '70', '71', '7E', '7F'],
+    nrcs: ['12', '13', '22', '24', '31', '33', '70', '71', '7E', '7F'],
     detail: 'ISO 14229-1:2020 新增的文件传输服务。支持文件系统级别的操作，如添加、删除、替换、读取文件和目录列表。' },
-  { sid: 0x3D, name: 'WriteMemoryByAddress', shortName: 'WMBA', unit: 'data-transmission', reqSID: '3D', resSID: '7D',
+  { sid: 0x3D, name: 'WriteMemoryByAddress', cn: '通过地址写入内存', shortName: 'WMBA', unit: 'data-transmission', reqSID: '3D', resSID: '7D',
     desc: '按内存地址直接写入服务器内存。需要指定地址和长度格式。',
     reqFmt: '3D + addressAndLengthFormat + memoryAddress + dataRecord',
     resFmt: '7D + memoryAddress + dataRecord',
     nrcs: ['13', '22', '31', '33', '72', '7F'],
     detail: '与 0x34 RequestDownload + 0x36 TransferData 不同，WriteMemoryByAddress 是单次写入操作，不涉及多块传输。适合小量数据写入。' },
-  { sid: 0x3E, name: 'TesterPresent', shortName: 'TP', unit: 'diagnostic-communication', reqSID: '3E', resSID: '7E',
+  { sid: 0x3E, name: 'TesterPresent', cn: '测试仪保持在线', shortName: 'TP', unit: 'diagnostic-communication', reqSID: '3E', resSID: '7E',
     desc: '向服务器（或多个服务器）指示客户端仍在连接中。延长非默认会话的超时时间。',
     subfuncs: [
       { val: '00', name: 'zeroSubFunction', desc: '零子功能（标准用法）' },
@@ -242,13 +242,13 @@ const SERVICES = [
     resFmt: '7E + zeroSubFunction',
     nrcs: ['13', '7F'],
     detail: '在非默认会话中必须周期性地发送 TesterPresent 消息以保持会话活跃。默认建议发送间隔不超过 2-3 秒。suppressResponse 位 (bit7) 设置为 1 时服务器不发送正响应。' },
-  { sid: 0x84, name: 'SecuredDataTransmission', shortName: 'SDT', unit: 'security', reqSID: '84', resSID: 'C4',
+  { sid: 0x84, name: 'SecuredDataTransmission', cn: '安全数据传输', shortName: 'SDT', unit: 'security', reqSID: '84', resSID: 'C4',
     desc: '安全数据传输服务。通过加密和/或签名机制传输诊断消息。',
     reqFmt: '84 + securitySubLayer + [ciphertext/MAC]',
     resFmt: 'C4 + securitySubLayer + [ciphertext/MAC]',
     nrcs: ['13', '22', '33', '34', '38', '39', '3A', '7F'],
     detail: '在诊断消息上添加安全层保护，支持加密和消息认证码。内部包含完整的诊断请求/响应消息。' },
-  { sid: 0x85, name: 'ControlDTCSetting', shortName: 'CDTCS', unit: 'diagnostic-communication', reqSID: '85', resSID: 'C5',
+  { sid: 0x85, name: 'ControlDTCSetting', cn: '控制DTC设置', shortName: 'CDTCS', unit: 'diagnostic-communication', reqSID: '85', resSID: 'C5',
     desc: '控制服务器 DTC 状态位的更新。可禁用 DTC 设置以防止误报。',
     subfuncs: [
       { val: '01', name: 'on', desc: '开启 DTC 设置' },
@@ -258,7 +258,7 @@ const SERVICES = [
     resFmt: 'C5 + DTCSettingControlOption',
     nrcs: ['12', '13', '22', '31', '33', '7E', '7F'],
     detail: '常用于编程会话前关闭 DTC 设置，防止编程过程中产生虚假 DTC。编程完成后重新开启。' },
-  { sid: 0x86, name: 'ResponseOnEvent', shortName: 'ROE', unit: 'diagnostic-communication', reqSID: '86', resSID: 'C6',
+  { sid: 0x86, name: 'ResponseOnEvent', cn: '事件响应', shortName: 'ROE', unit: 'diagnostic-communication', reqSID: '86', resSID: 'C6',
     desc: '配置服务器在特定事件发生时自动发送响应消息。无需客户端轮询。',
     subfuncs: [
       { val: '00', name: 'stopResponseOnEvent', desc: '停止响应事件' },
@@ -274,7 +274,7 @@ const SERVICES = [
     resFmt: 'C6 + eventType + [eventData]',
     nrcs: ['12', '13', '22', '24', '31', '33', '7E', '7F'],
     detail: '减少总线负载的机制。配置服务器在特定条件（如 DTC 变化、定时器）下主动发送响应，避免客户端重复轮询。' },
-  { sid: 0x87, name: 'LinkControl', shortName: 'LC', unit: 'diagnostic-communication', reqSID: '87', resSID: 'C7',
+  { sid: 0x87, name: 'LinkControl', cn: '链路控制', shortName: 'LC', unit: 'diagnostic-communication', reqSID: '87', resSID: 'C7',
     desc: '控制通信链路的参数，如波特率切换。',
     subfuncs: [
       { val: '01', name: 'verifyBaudrateTransitionWithFixedBaudrate', desc: '验证固定波特率切换' },
@@ -465,7 +465,7 @@ function renderServices(filterUnit = 'all', search = '') {
     html += `<div class="service-card fade-in" onclick="showServiceDetail(${s.sid})">
       <div class="header">
         <span class="sid">0x${s.sid.toString(16).toUpperCase().padStart(2,'0')}</span>
-        <span class="name">${s.name} (${s.shortName})</span>
+        <span class="name">${s.cn || s.name} (${s.name}, ${s.shortName})</span>
         <span class="func-unit" style="border-left:3px solid ${unitColor}"><span class="unit-dot" style="background:${unitColor};display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:middle"></span>${funcUnitName}</span>
       </div>
       <div class="desc">${s.desc}</div>
@@ -517,7 +517,7 @@ function showServiceDetail(sid) {
   }
 
   document.getElementById('modal-content').innerHTML = `
-    <h2><span class="sid-badge">0x${s.sid.toString(16).toUpperCase().padStart(2,'0')}</span> ${s.name} (${s.shortName})</h2>
+    <h2><span class="sid-badge">0x${s.sid.toString(16).toUpperCase().padStart(2,'0')}</span> ${s.cn || s.name} (${s.name}, ${s.shortName})</h2>
     <p style="color:var(--text2);margin-bottom:1rem">${funcUnitName} | 请求 <strong>0x${s.reqSID}</strong> → 正响应 <strong>0x${s.resSID}</strong> | 负响应 <strong>0x7F + 0x${s.reqSID} + NRC</strong></p>
     ${availHtml}
     <div class="section"><h3>描述</h3><div class="content">${s.detail || s.desc}</div></div>
@@ -779,7 +779,7 @@ function initBuilder() {
   for (const s of SERVICES) {
     const opt = document.createElement('option');
     opt.value = s.sid;
-    opt.textContent = `0x${s.reqSID} - ${s.name} (${s.shortName})`;
+    opt.textContent = `0x${s.reqSID} - ${s.cn || s.name} (${s.name}, ${s.shortName})`;
     select.appendChild(opt);
   }
   // Protocol mode switching
@@ -819,45 +819,12 @@ function initBuilder() {
 
 function updateBuilder() {
   if (_builderMode !== 'uds') return;
-  const sid = parseInt(document.getElementById('builder-sid').value);
-  const s = SERVICES.find(x => x.sid === sid);
+  const s = SERVICES.find(x => x.sid === parseInt(document.getElementById('builder-sid').value));
   if (!s) return;
 
-  const sfRow = document.getElementById('builder-subfunc-row');
-  const sfSelect = document.getElementById('builder-subfunc');
-  const hasSubfunc = s.subfuncs && s.subfuncs.length;
-  sfRow.style.display = hasSubfunc ? 'flex' : 'none';
-
-  // Only rebuild SF options when SID changes (fix: don't reset on every call)
-  if (hasSubfunc && sid !== _lastBuilderSid) {
-    const prevVal = sfSelect.value;
-    sfSelect.innerHTML = '<option value="none">无子功能</option>';
-    for (const sf of s.subfuncs) {
-      if (!sf.val.includes('-')) {
-        const opt = document.createElement('option');
-        opt.value = sf.val;
-        opt.textContent = `0x${sf.val} - ${sf.name}`;
-        sfSelect.appendChild(opt);
-      }
-    }
-    if ([...sfSelect.options].some(o => o.value === prevVal && prevVal !== 'none')) {
-      sfSelect.value = prevVal;
-    }
-  }
-  _lastBuilderSid = hasSubfunc ? sid : null;
-
-  // Build request bytes (use numbers for consistency)
-  const reqBytes = [parseInt(s.reqSID, 16)];
-  const sfVal = sfSelect.value;
-  if (sfVal && sfVal !== 'none') reqBytes.push(parseInt(sfVal, 16));
-
-  const dataInput = document.getElementById('builder-data');
-  let dataStr = dataInput.value.trim();
-  if (dataStr) {
-    for (const p of dataStr.split(/[\s,]+/)) {
-      if (/^[0-9a-fA-F]{2}$/.test(p)) reqBytes.push(parseInt(p, 16));
-    }
-  }
+  // Build request bytes using shared helper
+  const reqBytes = getUDSRequestBytes('uds-data');
+  const sfVal = document.getElementById('builder-subfunc').value;
 
   // Request display
   const reqDisplay = document.getElementById('builder-request');
@@ -879,7 +846,53 @@ function updateBuilder() {
     `负响应: <span class="byte" style="border-color:var(--danger);background:#fee2e2">7F</span> <span class="byte" style="border-color:var(--danger);background:#fee2e2">${s.reqSID}</span> <span class="byte" style="border-color:var(--danger);background:#fee2e2">NRC</span>`;
 }
 
+function syncSubfunctionRow() {
+  const sid = parseInt(document.getElementById('builder-sid').value);
+  const s = SERVICES.find(x => x.sid === sid);
+  if (!s) return;
+  const sfRow = document.getElementById('builder-subfunc-row');
+  const sfSelect = document.getElementById('builder-subfunc');
+  const hasSubfunc = s.subfuncs && s.subfuncs.length;
+  sfRow.style.display = hasSubfunc ? 'flex' : 'none';
+  if (hasSubfunc && sid !== _lastBuilderSid) {
+    const prevVal = sfSelect.value;
+    sfSelect.innerHTML = '<option value="none">无子功能</option>';
+    for (const sf of s.subfuncs) {
+      if (!sf.val.includes('-')) {
+        const opt = document.createElement('option');
+        opt.value = sf.val;
+        opt.textContent = `0x${sf.val} - ${sf.name}`;
+        sfSelect.appendChild(opt);
+      }
+    }
+    if ([...sfSelect.options].some(o => o.value === prevVal && prevVal !== 'none')) {
+      sfSelect.value = prevVal;
+    }
+  }
+  _lastBuilderSid = hasSubfunc ? sid : null;
+}
+
+function getUDSRequestBytes(extraDataId) {
+  const sid = parseInt(document.getElementById('builder-sid').value);
+  const s = SERVICES.find(x => x.sid === sid);
+  if (!s) return [];
+  const bytes = [parseInt(s.reqSID, 16)];
+  const sfVal = document.getElementById('builder-subfunc').value;
+  if (sfVal && sfVal !== 'none') bytes.push(parseInt(sfVal, 16));
+  const extraEl = document.getElementById(extraDataId);
+  if (extraEl) {
+    const dataStr = extraEl.value.trim();
+    if (dataStr) {
+      for (const p of dataStr.split(/[\s,]+/)) {
+        if (/^[0-9a-fA-F]{2}$/.test(p)) bytes.push(parseInt(p, 16));
+      }
+    }
+  }
+  return bytes;
+}
+
 function updateBuilderByMode() {
+  syncSubfunctionRow();
   switch (_builderMode) {
     case 'uds': updateBuilder(); break;
     case 'can': updateBuilderCAN(); break;
@@ -893,15 +906,11 @@ function updateBuilderCAN() {
   const idFormat = document.querySelector('input[name="can-id-format"]:checked').value;
   const frameType = document.querySelector('input[name="can-frame-type"]:checked').value;
 
-  const dataInput = document.getElementById('builder-data').value.trim();
-  const dataBytes = [];
-  if (dataInput) {
-    for (const p of dataInput.split(/[\s,]+/)) {
-      if (/^[0-9a-fA-F]{2}$/.test(p)) dataBytes.push(parseInt(p, 16));
-    }
-  }
+  // Build UDS request bytes from shared SID + extra CAN data
+  const reqBytes = getUDSRequestBytes('can-data');
+  const dataBytes = reqBytes.length > 8 ? reqBytes.slice(0, 8) : reqBytes;
 
-  const dlc = dataBytes.length > 8 ? 8 : dataBytes.length;
+  const dlc = dataBytes.length;
   const rtr = frameType === 'remote' ? 1 : 0;
 
   if (!idStr) {
@@ -938,12 +947,12 @@ function updateBuilderCAN() {
     html += `<div class="can-field arb"><span class="field-label">ARB(29+SRR+IDE+RTR)</span><span class="field-value">${idBin.slice(0,8)}...${rtr}</span></div>`;
   }
 
-  // Control field
+  // Control field (per ISO 11898-1:2015 §10.4.2.4)
   let ctrlHtml = '';
   if (idFormat === '11') {
-    ctrlHtml = `IDE=0 r0=0 DLC=${dlc}`;
+    ctrlHtml = `IDE=0 FDF=0 DLC=${dlc}`;
   } else {
-    ctrlHtml = `r1=0 r0=0 DLC=${dlc}`;
+    ctrlHtml = `FDF=0 r0=0 DLC=${dlc}`;
   }
   html += `<div class="can-field ctrl"><span class="field-label">CTRL</span><span class="field-value">${ctrlHtml}</span></div>`;
 
@@ -984,22 +993,19 @@ function updateBuilderLIN() {
   const preview = document.getElementById('lin-builder-preview');
   const role = document.querySelector('input[name="lin-role"]:checked').value;
   const nadStr = document.getElementById('lin-nad').value.trim();
-  const checksumType = document.querySelector('input[name="lin-checksum-type"]:checked').value;
 
-  // PID fixed per ISO 17987: Master→Slave = 0x3C, Slave→Master = 0x3D
+  // PID fixed per ISO 17987
   const pidVal = role === 'master' ? 0x3C : 0x3D;
   const pidDisplay = document.getElementById('lin-pid-display');
   if (pidDisplay) {
     pidDisplay.textContent = `0x${pidVal.toString(16).toUpperCase()} (${role === 'master' ? '主→从诊断请求' : '从→主诊断响应'})`;
   }
 
-  // NAD validation: 7-bit address, range 0x00-0x7F
+  // NAD validation
   const nadInput = document.getElementById('lin-nad');
-  let nadValid = true;
   if (nadStr) {
     const nadVal = parseInt(nadStr, 16);
     if (isNaN(nadVal) || nadVal < 0 || nadVal > 0x7F) {
-      nadValid = false;
       nadInput.style.borderColor = 'var(--danger)';
       nadInput.style.background = '#fee2e2';
       preview.innerHTML = '<span style="color:var(--danger)">⚠️ NAD 有效范围: 00-7F</span>';
@@ -1009,66 +1015,129 @@ function updateBuilderLIN() {
   nadInput.style.borderColor = '';
   nadInput.style.background = '';
 
-  const dataInput = document.getElementById('builder-data').value.trim();
-  const dataBytes = [];
-  if (dataInput) {
-    for (const p of dataInput.split(/[\s,]+/)) {
-      if (/^[0-9a-fA-F]{2}$/.test(p)) dataBytes.push(parseInt(p, 16));
-    }
-  }
+  // Parse payload from shared SID + extra LIN data
+  const payload = getUDSRequestBytes('lin-data');
 
-  // LIN diagnostic data field fixed to 8 bytes, pad with 0x00
-  while (dataBytes.length < 8) dataBytes.push(0x00);
-  if (dataBytes.length > 8) dataBytes.length = 8;
+  const payloadLen = payload.length;
+  const nadVal = parseInt(nadStr || '00', 16);
+  const isFF = payloadLen > 6;
 
-  // PID parity per LIN spec: PID[7:0] = {P1, P0, ID5, ID4, ID3, ID2, ID1, ID0}
+  // PID parity calculation
   const id0 = (pidVal >> 0) & 1, id1 = (pidVal >> 1) & 1;
   const id2 = (pidVal >> 2) & 1, id3 = (pidVal >> 3) & 1;
   const id4 = (pidVal >> 4) & 1, id5 = (pidVal >> 5) & 1;
   const p0 = id0 ^ id1 ^ id2 ^ id4;
   const p1 = (id1 ^ id3 ^ id4 ^ id5) ^ 1;
   const pidWithParity = (p1 << 7) | (p0 << 6) | pidVal;
-
-  // Checksum calculation
-  let checksumSum = 0;
-  if (checksumType === 'enhanced') checksumSum += pidVal;
-  for (const b of dataBytes) checksumSum += b;
-  const checksum = (0xFF - (checksumSum & 0xFF)) & 0xFF;
-
-  // Build LIN frame preview
-  let html = '<div class="lin-frame-preview">';
-
-  // SynchBreak
-  html += `<div class="lin-field sync-break"><span class="field-label">BREAK</span><span class="field-value">13+ bit</span></div>`;
-
-  // SynchByte
-  html += `<div class="lin-field sync-byte"><span class="field-label">SYNC</span><span class="field-value">0x55</span></div>`;
-
-  // PID with parity
   const pidHex = pidWithParity.toString(16).toUpperCase().padStart(2, '0');
-  const pidBin = pidWithParity.toString(2).padStart(8, '0');
-  html += `<div class="lin-field pid-field"><span class="field-label">PID=0x${pidHex}</span><span class="field-value">P1=${p1} P0=${p0}</span></div>`;
 
-  // Data bytes (always 8 bytes for diagnostic)
-  const dataHex = dataBytes.map(b => b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
-  html += `<div class="lin-field data-field"><span class="field-label">DATA(8B)</span><span class="field-value">${dataHex}</span></div>`;
+  // Classic checksum helper
+  function calcChecksum(bytes) {
+    let s = 0;
+    for (const b of bytes) s += b;
+    return (0xFF - (s & 0xFF)) & 0xFF;
+  }
 
-  // Checksum
-  const csHex = checksum.toString(16).toUpperCase().padStart(2, '0');
-  const csType = checksumType === 'classic' ? 'Classic' : 'Enhanced';
-  html += `<div class="lin-field checksum-field"><span class="field-label">CHK(${csType})</span><span class="field-value">0x${csHex}</span></div>`;
+  // Build frame header (Break + Sync + PID)
+  function renderHeader() {
+    return `<div class="lin-field sync-break"><span class="field-label">BREAK</span><span class="field-value">13+ bit</span></div>`
+      + `<div class="lin-field sync-byte"><span class="field-label">SYNC</span><span class="field-value">0x55</span></div>`
+      + `<div class="lin-field pid-field"><span class="field-label">PID=0x${pidHex}</span><span class="field-value">P1=${p1} P0=${p0}</span></div>`
+      + `<div class="lin-field" style="background:#6366f1;color:#fff"><span class="field-label">NAD</span><span class="field-value">0x${nadVal.toString(16).toUpperCase().padStart(2,'0')}</span></div>`;
+  }
 
-  html += '</div>';
+  // Render a frame entry with PCI + data + checksum
+  function renderFrame(frame, label, pciLabel) {
+    const pciContent = Array.isArray(frame.pci)
+      ? frame.pci.map(b => '0x' + b.toString(16).toUpperCase().padStart(2,'0')).join(' ')
+      : '0x' + frame.pci.toString(16).toUpperCase().padStart(2,'0');
+    const dataHex = frame.data.map(b => b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
+    const csHex = calcChecksum(frame.bytes).toString(16).toUpperCase().padStart(2, '0');
 
-  // Info line
-  const nadHex = nadStr ? '0x' + nadStr.toUpperCase() : '—';
+    let h = '<div style="margin-bottom:8px;padding:6px 8px;border:1px solid var(--border);border-radius:8px">';
+    h += `<div style="font-size:.7rem;font-weight:700;color:var(--text2);margin-bottom:4px">${label}</div>`;
+    h += '<div class="lin-frame-preview">';
+    h += renderHeader();
+    h += `<div class="lin-field" style="background:#f59e0b;color:#1a1a2e"><span class="field-label">${pciLabel}</span><span class="field-value">${pciContent}</span></div>`;
+    if (frame.data.length > 0) {
+      h += `<div class="lin-field data-field"><span class="field-label">DATA(${frame.data.length}B)</span><span class="field-value">${dataHex}</span></div>`;
+    }
+    const padCount = frame.padBytes;
+    if (padCount > 0) {
+      const padHex = Array(padCount).fill('00').join(' ');
+      h += `<div class="lin-field" style="background:#6b7280;color:#fff;opacity:.7"><span class="field-label">PAD(${padCount}B)</span><span class="field-value">${padHex}</span></div>`;
+    }
+    h += `<div class="lin-field checksum-field"><span class="field-label">CHK</span><span class="field-value">0x${csHex}</span></div>`;
+    h += '</div></div>';
+    return h;
+  }
+
+  let html = '';
+  const nadHexDisplay = '0x' + nadStr.toUpperCase();
+
+  if (!isFF) {
+    // SingleFrame: 1 frame, 8 bytes
+    const frameBytes = [nadVal, payloadLen, ...payload];
+    while (frameBytes.length < 8) frameBytes.push(0x00);
+    if (frameBytes.length > 8) frameBytes.length = 8;
+
+    const frame = {
+      pci: payloadLen,
+      data: payloadLen > 0 ? frameBytes.slice(2, 2 + payloadLen) : [],
+      padBytes: 6 - payloadLen,
+      bytes: frameBytes
+    };
+    html = renderFrame(frame, `单帧 SF (${payloadLen} 字节 UDS 数据)`, 'PCI(SF)');
+  } else {
+    // Multi-frame: FF + CFs
+    // FF: 2-byte PCI (length), carries 5 data bytes
+    const ffPci1 = 0x10 | ((payloadLen >> 8) & 0x0F);
+    const ffPci2 = payloadLen & 0xFF;
+    const ffData = payload.slice(0, 5);
+    const ffBytes = [nadVal, ffPci1, ffPci2, ...ffData];
+    while (ffBytes.length < 8) ffBytes.push(0x00);
+    ffBytes.length = 8;
+
+    html = renderFrame({
+      pci: [ffPci1, ffPci2],
+      data: ffData,
+      padBytes: 5 - ffData.length,
+      bytes: ffBytes
+    }, `帧 1 — 首帧 FF (总长 ${payloadLen} 字节, 第 1-5 字节)`, 'PCI(FF)');
+
+    // CFs: each carries 6 data bytes, PCI = 0x20 | SN
+    let offset = 5;
+    let sn = 1;
+    while (offset < payloadLen) {
+      const chunk = payload.slice(offset, offset + 6);
+      const cfPci = 0x20 | sn;
+      const cfBytes = [nadVal, cfPci, ...chunk];
+      while (cfBytes.length < 8) cfBytes.push(0x00);
+      cfBytes.length = 8;
+      const remaining = payloadLen - offset;
+
+      html += renderFrame({
+        pci: cfPci,
+        data: chunk,
+        padBytes: 6 - chunk.length,
+        bytes: cfBytes
+      }, `帧 ${sn + 1} — 连续帧 CF-${sn} (第 ${offset + 1}-${Math.min(offset + 6, payloadLen)} 字节)`, 'PCI(CF)');
+
+      offset += 6;
+      sn++;
+    }
+  }
+
+  // Summary info line
   html += `<div class="lin-frame-info">`;
   html += `角色: ${role === 'master' ? 'Master' : 'Slave'} | `;
-  html += `NAD: ${nadHex} | `;
-  html += `PID(含校验): 0x${pidHex} (${pidBin}) | `;
-  html += `校验和: ${csType}(`;
-  html += checksumType === 'classic' ? '仅数据)' : 'PID+数据)';
-  html += ` | 数据: 8 字节 (≤输入自动补足)`;
+  html += `NAD: ${nadHexDisplay} | 有效载荷: ${payloadLen} 字节`;
+  if (isFF) {
+    const cfCount = Math.ceil((payloadLen - 5) / 6);
+    html += ` | 传输序列: 1 FF + ${cfCount} CF = ${cfCount + 1} 帧`;
+  } else {
+    html += ` | 传输: 1 SF 帧`;
+  }
   html += `</div>`;
 
   preview.innerHTML = html;
@@ -1081,47 +1150,65 @@ function copyBuilderHex(mode) {
     const idStr = document.getElementById('can-builder-id').value.trim();
     const idFormat = document.querySelector('input[name="can-id-format"]:checked').value;
     const frameType = document.querySelector('input[name="can-frame-type"]:checked').value;
-    const dataInput = document.getElementById('builder-data').value.trim();
+    const reqBytes = getUDSRequestBytes('can-data').slice(0, 8);
 
     if (!idStr) return;
     const idVal = parseInt(idStr, 16);
     if (isNaN(idVal)) return;
 
     const idHex = idVal.toString(16).toUpperCase().padStart(idFormat === '11' ? 3 : 8, '0');
-    const dlcHex = getDataBytes(dataInput).length.toString(16).toUpperCase();
-    const dataHex = getDataBytes(dataInput).map(b => b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
-    hexStr = `[CAN ${idFormat==='11'?'标准':'扩展'}] ID=0x${idHex} ${frameType==='remote'?'RTR':''} DLC=${parseInt(dlcHex,16)} ${dataHex}`;
+    const dataHex = reqBytes.map(b => b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
+    hexStr = `[CAN ${idFormat==='11'?'标准':'扩展'}] ID=0x${idHex} ${frameType==='remote'?'RTR':''} DLC=${reqBytes.length} ${dataHex}`;
   } else if (mode === 'lin') {
     const role = document.querySelector('input[name="lin-role"]:checked').value;
     const nadStr = document.getElementById('lin-nad').value.trim();
-    const checksumType = document.querySelector('input[name="lin-checksum-type"]:checked').value;
-
-    // Validate NAD first
     if (nadStr) {
-      const nadVal = parseInt(nadStr, 16);
-      if (isNaN(nadVal) || nadVal < 0 || nadVal > 0x7F) return;
+      const nv = parseInt(nadStr, 16);
+      if (isNaN(nv) || nv < 0 || nv > 0x7F) return;
     }
-
-    // PID fixed per ISO 17987
     const pidVal = role === 'master' ? 0x3C : 0x3D;
-
-    let dataBytes = getDataBytes(document.getElementById('builder-data').value.trim());
-    while (dataBytes.length < 8) dataBytes.push(0x00);
-    if (dataBytes.length > 8) dataBytes.length = 8;
+    const nadByte = parseInt(nadStr || '00', 16);
+    const payload = getUDSRequestBytes('lin-data');
+    const len = payload.length;
 
     const id0 = (pidVal >> 0) & 1, id1 = (pidVal >> 1) & 1, id2 = (pidVal >> 2) & 1;
     const id3 = (pidVal >> 3) & 1, id4 = (pidVal >> 4) & 1, id5 = (pidVal >> 5) & 1;
     const p0 = id0 ^ id1 ^ id2 ^ id4;
     const p1 = (id1 ^ id3 ^ id4 ^ id5) ^ 1;
     const pidWithParity = (p1 << 7) | (p0 << 6) | pidVal;
+    const pidHex = pidWithParity.toString(16).toUpperCase().padStart(2, '0');
 
-    let checksumSum = 0;
-    if (checksumType === 'enhanced') checksumSum += pidVal;
-    for (const b of dataBytes) checksumSum += b;
-    const checksum = (0xFF - (checksumSum & 0xFF)) & 0xFF;
+    function frameToHex(fb) {
+      let s = 0;
+      for (const b of fb) s += b;
+      const cs = (0xFF - (s & 0xFF)) & 0xFF;
+      return `55 ${pidHex} ${fb.map(b => b.toString(16).toUpperCase().padStart(2,'0')).join(' ')} ${cs.toString(16).toUpperCase().padStart(2,'0')}`;
+    }
 
-    const dataHex = dataBytes.map(b => b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
-    hexStr = `55 ${pidWithParity.toString(16).toUpperCase().padStart(2,'0')} ${dataHex} ${checksum.toString(16).toUpperCase().padStart(2,'0')}`.trim();
+    const lines = [];
+    if (len <= 6) {
+      const fb = [nadByte, len, ...payload];
+      while (fb.length < 8) fb.push(0x00);
+      fb.length = 8;
+      lines.push(frameToHex(fb));
+    } else {
+      // FF
+      const ff = [nadByte, 0x10 | ((len >> 8) & 0x0F), len & 0xFF, ...payload.slice(0, 5)];
+      while (ff.length < 8) ff.push(0x00);
+      ff.length = 8;
+      lines.push(frameToHex(ff));
+      // CFs
+      let offset = 5, sn = 1;
+      while (offset < len) {
+        const chunk = payload.slice(offset, offset + 6);
+        const cf = [nadByte, 0x20 | sn, ...chunk];
+        while (cf.length < 8) cf.push(0x00);
+        cf.length = 8;
+        lines.push(frameToHex(cf));
+        offset += 6; sn++;
+      }
+    }
+    hexStr = lines.join('\n').trim();
   }
 
   navigator.clipboard.writeText(hexStr).then(() => {

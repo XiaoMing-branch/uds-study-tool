@@ -3148,7 +3148,9 @@ function calculateLINChecksum(data, pid, enhanced) {
 
 function sendLINFrame(id, data) {
   var pid = calculateLINParity(id);
-  var checksum = calculateLINChecksum(data, pid, true);
+  // ISO 17987-3:2016 §5.2.2.7: 0x3C/0x3D always classic, 0x00-0x3B enhanced
+  var isDiag = (id === 0x3C || id === 0x3D);
+  var checksum = calculateLINChecksum(data, isDiag ? 0 : pid, !isDiag);
   var frame = { time: new Date().toLocaleTimeString(), dir: linState.mode==='master'?'M→S':'S→M', pid: pid, data: data, chk: checksum };
   linState.frames.unshift(frame);
   if (linState.frames.length > linState.maxFrames) linState.frames.pop();
