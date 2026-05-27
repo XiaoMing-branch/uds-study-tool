@@ -174,8 +174,8 @@
             <input type="text" id="lin-nad" placeholder="如: 01" value="01" oninput="updateBuilderByMode()">
           </div>
           <div class="builder-row">
-            <label>PID (HEX 00-3F):</label>
-            <input type="text" id="lin-pid" placeholder="如: 10" oninput="updateBuilderByMode()">
+            <label>诊断 PID:</label>
+            <span id="lin-pid-display" style="font-family:monospace;font-weight:600;color:var(--primary);padding:.5rem 0">0x3C (主→从诊断请求)</span>
           </div>
           <div class="builder-row">
             <label>校验和:</label>

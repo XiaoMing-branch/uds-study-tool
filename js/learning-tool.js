@@ -984,8 +984,30 @@ function updateBuilderLIN() {
   const preview = document.getElementById('lin-builder-preview');
   const role = document.querySelector('input[name="lin-role"]:checked').value;
   const nadStr = document.getElementById('lin-nad').value.trim();
-  const pidStr = document.getElementById('lin-pid').value.trim();
   const checksumType = document.querySelector('input[name="lin-checksum-type"]:checked').value;
+
+  // PID fixed per ISO 17987: Master→Slave = 0x3C, Slave→Master = 0x3D
+  const pidVal = role === 'master' ? 0x3C : 0x3D;
+  const pidDisplay = document.getElementById('lin-pid-display');
+  if (pidDisplay) {
+    pidDisplay.textContent = `0x${pidVal.toString(16).toUpperCase()} (${role === 'master' ? '主→从诊断请求' : '从→主诊断响应'})`;
+  }
+
+  // NAD validation: 7-bit address, range 0x00-0x7F
+  const nadInput = document.getElementById('lin-nad');
+  let nadValid = true;
+  if (nadStr) {
+    const nadVal = parseInt(nadStr, 16);
+    if (isNaN(nadVal) || nadVal < 0 || nadVal > 0x7F) {
+      nadValid = false;
+      nadInput.style.borderColor = 'var(--danger)';
+      nadInput.style.background = '#fee2e2';
+      preview.innerHTML = '<span style="color:var(--danger)">⚠️ NAD 有效范围: 00-7F</span>';
+      return;
+    }
+  }
+  nadInput.style.borderColor = '';
+  nadInput.style.background = '';
 
   const dataInput = document.getElementById('builder-data').value.trim();
   const dataBytes = [];
@@ -995,16 +1017,9 @@ function updateBuilderLIN() {
     }
   }
 
-  if (!pidStr) {
-    preview.innerHTML = '<span style="color:var(--text2)">请输入 PID</span>';
-    return;
-  }
-
-  const pidVal = parseInt(pidStr, 16);
-  if (isNaN(pidVal) || pidVal < 0 || pidVal > 0x3F) {
-    preview.innerHTML = '<span style="color:var(--danger)">PID 范围: 0x00-0x3F</span>';
-    return;
-  }
+  // LIN diagnostic data field fixed to 8 bytes, pad with 0x00
+  while (dataBytes.length < 8) dataBytes.push(0x00);
+  if (dataBytes.length > 8) dataBytes.length = 8;
 
   // PID parity per LIN spec: PID[7:0] = {P1, P0, ID5, ID4, ID3, ID2, ID1, ID0}
   const id0 = (pidVal >> 0) & 1, id1 = (pidVal >> 1) & 1;
@@ -1016,7 +1031,7 @@ function updateBuilderLIN() {
 
   // Checksum calculation
   let checksumSum = 0;
-  if (checksumType === 'enhanced') checksumSum += pidVal; // PID low 6 bits
+  if (checksumType === 'enhanced') checksumSum += pidVal;
   for (const b of dataBytes) checksumSum += b;
   const checksum = (0xFF - (checksumSum & 0xFF)) & 0xFF;
 
@@ -1034,13 +1049,9 @@ function updateBuilderLIN() {
   const pidBin = pidWithParity.toString(2).padStart(8, '0');
   html += `<div class="lin-field pid-field"><span class="field-label">PID=0x${pidHex}</span><span class="field-value">P1=${p1} P0=${p0}</span></div>`;
 
-  // Data bytes
-  if (dataBytes.length > 0) {
-    const dataHex = dataBytes.map(b => b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
-    html += `<div class="lin-field data-field"><span class="field-label">DATA(${dataBytes.length}B)</span><span class="field-value">${dataHex}</span></div>`;
-  } else {
-    html += `<div class="lin-field data-field" style="opacity:.6"><span class="field-label">DATA</span><span class="field-value">(空)</span></div>`;
-  }
+  // Data bytes (always 8 bytes for diagnostic)
+  const dataHex = dataBytes.map(b => b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
+  html += `<div class="lin-field data-field"><span class="field-label">DATA(8B)</span><span class="field-value">${dataHex}</span></div>`;
 
   // Checksum
   const csHex = checksum.toString(16).toUpperCase().padStart(2, '0');
@@ -1055,8 +1066,9 @@ function updateBuilderLIN() {
   html += `角色: ${role === 'master' ? 'Master' : 'Slave'} | `;
   html += `NAD: ${nadHex} | `;
   html += `PID(含校验): 0x${pidHex} (${pidBin}) | `;
-  html += `校验和算法: ${csType}(`;
+  html += `校验和: ${csType}(`;
   html += checksumType === 'classic' ? '仅数据)' : 'PID+数据)';
+  html += ` | 数据: 8 字节 (≤输入自动补足)`;
   html += `</div>`;
 
   preview.innerHTML = html;
@@ -1080,15 +1092,23 @@ function copyBuilderHex(mode) {
     const dataHex = getDataBytes(dataInput).map(b => b.toString(16).toUpperCase().padStart(2,'0')).join(' ');
     hexStr = `[CAN ${idFormat==='11'?'标准':'扩展'}] ID=0x${idHex} ${frameType==='remote'?'RTR':''} DLC=${parseInt(dlcHex,16)} ${dataHex}`;
   } else if (mode === 'lin') {
-    const pidStr = document.getElementById('lin-pid').value.trim();
-    const dataInput = document.getElementById('builder-data').value.trim();
+    const role = document.querySelector('input[name="lin-role"]:checked').value;
+    const nadStr = document.getElementById('lin-nad').value.trim();
     const checksumType = document.querySelector('input[name="lin-checksum-type"]:checked').value;
 
-    if (!pidStr) return;
-    const pidVal = parseInt(pidStr, 16);
-    if (isNaN(pidVal) || pidVal > 0x3F) return;
+    // Validate NAD first
+    if (nadStr) {
+      const nadVal = parseInt(nadStr, 16);
+      if (isNaN(nadVal) || nadVal < 0 || nadVal > 0x7F) return;
+    }
 
-    const dataBytes = getDataBytes(dataInput);
+    // PID fixed per ISO 17987
+    const pidVal = role === 'master' ? 0x3C : 0x3D;
+
+    let dataBytes = getDataBytes(document.getElementById('builder-data').value.trim());
+    while (dataBytes.length < 8) dataBytes.push(0x00);
+    if (dataBytes.length > 8) dataBytes.length = 8;
+
     const id0 = (pidVal >> 0) & 1, id1 = (pidVal >> 1) & 1, id2 = (pidVal >> 2) & 1;
     const id3 = (pidVal >> 3) & 1, id4 = (pidVal >> 4) & 1, id5 = (pidVal >> 5) & 1;
     const p0 = id0 ^ id1 ^ id2 ^ id4;
