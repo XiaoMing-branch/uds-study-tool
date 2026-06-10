@@ -2,13 +2,13 @@
 // ======================== I18N ========================
 const I18N = {
   zh: {
-    'sim.title':'🔌 UDS Simulator','sim.badge':'ISO 14229-1:2020','sim.clearLog':'🗑️ 清空日志','sim.resetECU':'🔄 重置 ECU','sim.autoTP':'⏱️ 自动 TP: 关','sim.autoTP.on':'⏱️ 自动 TP: 开','sim.targetECU':'🎯 目标 ECU:','sim.session':'会话','sim.security':'安全等级','sim.p2':'P2 (ms)','sim.p2star':'P2* (ms)','sim.s3':'S3 (ms)','sim.comm':'响应模式','sim.counter':'📊 计数器','sim.rxCount':'已收消息','sim.txCount':'已发消息','sim.posCount':'正响应','sim.negCount':'负响应','sim.scenarios':'📋 场景快速执行','sim.dtcInject':'⚡ DTC 注入','sim.openDTC':'⚡ 打开 DTC 注入面板','sim.flashStatus':'📥 刷写状态','sim.appValid':'应用有效','sim.bootloader':'Bootloader','sim.didValues':'💾 DID 值 (模拟)','sim.editDID':'✏️ 编辑 DID 值','sim.logTitle':'📝 消息日志','sim.timeline':'📊 时间线','sim.history':'📋 历史记录','sim.emptyLog':'等待诊断消息...','sim.emptyHint':'使用右侧构造器发送 UDS 请求，或点击左侧场景快速体验','sim.composerTitle':'📤 消息构造器','sim.service':'服务 (SID)','sim.subfunc':'子功能','sim.dataBytes':'数据字节 (HEX, 空格分隔)','sim.dataPlaceholder':'例如: F1 90','sim.quickDID':'常用 DID:','sim.sendRequest':'📤 发送请求','sim.rawHex':'原始 HEX 发送（自动识别 SID）','sim.rawPlaceholder':'例如: 22 F1 90','sim.sendRaw':'📤 发送','sim.requestPreview':'请求预览','sim.responsePreview':'预期响应','sim.responsePos':'正响应','sim.responseNeg':'负响应','sim.decodeInfo':'解码信息','sim.sectionISOTP':'🔗 ISO-TP 配置','sim.isotpSTmin':'STmin (ms)','sim.isotpBlockSize':'Block Size','sim.isotpFFDelay':'FF 延时 (ms)','sim.isotpCFDelay':'CF 延时 (ms)','sim.sectionFlash':'📥 刷写流程','sim.sectionError':'⚡ 错误注入','sim.sectionCAN':'🛞 CAN 总线配置','sim.sectionOBD2':'🛞 OBD-II 配置','sim.sectionDoIP':'🌐 DoIP 配置','sim.ecuTitle_A':'ECU_A — 发动机控制器 (ECM)','sim.ecuTitle_B':'ECU_B — 变速箱控制器 (TCM)','sim.ecuTitle_C':'ECU_C — 安全气囊控制器 (ABM)','did.F190':'F190 (VIN)','did.F191':'F191 (硬件号)','did.F192':'F192 (软件号)','did.F193':'F193 (ECU 名称)','did.F194':'F194 (水温)','did.F195':'F195 (转速)','did.F196':'F196 (车速)','did.F197':'F197 (里程)','did.F199':'F199 (供电电压)','did.F19A':'F19A (环境温度)','did.F19C':'F19C (油量)','sim.msgCount':'条消息',
+    'sim.title':'🔌 UDS Simulator','sim.badge':'ISO 14229-1:2020','sim.clearLog':'🗑️ 清空日志','sim.resetECU':'🔄 重置 ECU','sim.autoTP':'⏱️ 自动 TP: 关','sim.autoTP.on':'⏱️ 自动 TP: 开','sim.targetECU':'🎯 目标 ECU:','sim.session':'会话','sim.security':'安全等级','sim.p2':'P2 (ms)','sim.p2star':'P2* (ms)','sim.s3':'S3 (ms)','sim.comm':'响应模式','sim.counter':'📊 计数器','sim.rxCount':'已收消息','sim.txCount':'已发消息','sim.posCount':'正响应','sim.negCount':'负响应','sim.scenarios':'📋 场景快速执行','sim.dtcInject':'⚡ DTC 注入','sim.openDTC':'⚡ 打开 DTC 注入面板','sim.flashStatus':'📥 刷写状态','sim.appValid':'应用有效','sim.bootloader':'Bootloader','sim.didValues':'💾 DID 值 (模拟)','sim.editDID':'✏️ 编辑 DID 值','sim.logTitle':'📝 消息日志','sim.timeline':'📊 时间线','sim.history':'📋 历史记录','sim.emptyLog':'等待诊断消息...','sim.emptyHint':'使用右侧构造器发送 UDS 请求，或点击左侧场景快速体验','sim.composerTitle':'📤 消息构造器','sim.service':'服务 (SID)','sim.subfunc':'子功能','sim.dataBytes':'数据字节 (HEX, 空格分隔)','sim.dataPlaceholder':'例如: F1 90','sim.quickDID':'常用 DID:','sim.sendRequest':'📤 发送请求','sim.rawHex':'原始 HEX 发送（自动识别 SID）','sim.rawPlaceholder':'例如: 22 F1 90','sim.sendRaw':'📤 发送','sim.requestPreview':'请求预览','sim.responsePreview':'预期响应','sim.responsePos':'正响应','sim.responseNeg':'负响应','sim.decodeInfo':'解码信息','sim.sectionISOTP':'🔗 ISO-TP 配置','sim.isotpSTmin':'STmin (ms)','sim.isotpBlockSize':'Block Size','sim.isotpFFDelay':'FF 延时 (ms)','sim.isotpCFDelay':'CF 延时 (ms)','sim.sectionFlash':'📥 刷写流程','sim.sectionError':'⚡ 错误注入','sim.sectionCAN':'🛞 CAN 总线配置','sim.sectionOBD2':'🛞 OBD-II 配置','sim.sectionDoIP':'🌐 DoIP 配置','sim.ecuTitle_A':'ECU_A — 发动机控制器 (ECM)','sim.ecuTitle_B':'ECU_B — 变速箱控制器 (TCM)','sim.ecuTitle_C':'ECU_C — 安全气囊控制器 (ABM)','did.F190':'F190 (VIN 码)','did.F191':'F191 (ECU 硬件号)','did.F192':'F192 (ECU 软件号)','did.F193':'F193 (系统名称)','did.F194':'F194 (水温)','did.F195':'F195 (转速)','did.F196':'F196 (车速)','did.F197':'F197 (里程)','did.F199':'F199 (供电电压)','did.F19A':'F19A (环境温度)','did.F19C':'F19C (油量)','sim.msgCount':'条消息',
     'scenario.default':'🔵 进入默认会话','scenario.extended':'🟡 进入扩展会话','scenario.programming':'🔴 进入编程会话','scenario.tp':'💓 TesterPresent','scenario.readVin':'🔍 读取 VIN (DID F190)','scenario.readDTC':'⚠️ 读取 DTC 状态','scenario.security':'🔐 SecurityAccess (种子→密钥)','scenario.reset':'🔄 ECU 硬复位','scenario.fullDiag':'📋 完整诊断流程演示','scenario.clearDTC':'🧹 清除 DTC','scenario.readMulti':'📊 批量读取 DID','scenario.routine':'🔧 启动校验例程','scenario.download':'📥 下载流程演示','scenario.isotp':'🔗 ISO-TP 多帧传输演示','scenario.flash':'📥 完整刷写流程（含多帧）',
     'scenario.desc.default':'10 01 → defaultSession','scenario.desc.extended':'10 03 → extendedDiagnosticSession','scenario.desc.programming':'10 02 → programmingSession','scenario.desc.tp':'3E 00 → 保持会话活跃','scenario.desc.readVin':'22 F1 90 → VIN 码','scenario.desc.readDTC':'19 02 → 按状态报告 DTC','scenario.desc.security':'27 01 → 请求种子 → 27 02 发送密钥','scenario.desc.reset':'11 01 → hardReset','scenario.desc.fullDiag':'扩展会话 → 安全解锁 → 读取 → 编程...','scenario.desc.clearDTC':'14 FF FF FF → 清除所有故障码','scenario.desc.readMulti':'22 F1 90 F1 92 F1 93 → 多 DID 请求','scenario.desc.routine':'31 01 FF 02 → 启动 Checksum 例程','scenario.desc.download':'34 → 36 → 37 完整下载序列','scenario.desc.isotp':'30 字节数据 → FF+FC+CF+CF+CF+CF → UDS 处理','scenario.desc.flash':'10→27→31→34→36×8→37→复位 完整刷写序列',
     'sim.dtcInjector':'⚡ DTC 注入面板','sim.dtcList':'DTC 列表','sim.addDTC':'➕ 添加 DTC','sim.closeDTC':'关闭','sim.didEditor':'✏️ DID 编辑器','sim.didName':'DID','sim.didValue':'当前值','sim.saveDID':'保存','sim.cancelDID':'取消','sim.historyTitle':'📋 历史记录','sim.historyEmpty':'暂无历史记录','sim.closeHistory':'关闭','common.locked':'🔒 Locked','common.unlocked':'🔓 Unlocked','common.normal':'Normal','common.off':'Off','common.on':'On','common.valid':'✅ 有效','common.inactive':'⏹️ 未激活','common.invalid':'❌ 无效','common.active':'▶ 激活',
   },
   en: {
-    'sim.title':'🔌 UDS Simulator','sim.badge':'ISO 14229-1:2020','sim.clearLog':'🗑️ Clear Log','sim.resetECU':'🔄 Reset ECU','sim.autoTP':'⏱️ Auto TP: Off','sim.autoTP.on':'⏱️ Auto TP: On','sim.targetECU':'🎯 Target ECU:','sim.session':'Session','sim.security':'Security','sim.p2':'P2 (ms)','sim.p2star':'P2* (ms)','sim.s3':'S3 (ms)','sim.comm':'Comm Mode','sim.counter':'📊 Counters','sim.rxCount':'Rx Messages','sim.txCount':'Tx Messages','sim.posCount':'Positive','sim.negCount':'Negative','sim.scenarios':'📋 Scenarios','sim.dtcInject':'⚡ DTC Injection','sim.openDTC':'⚡ Open DTC Injector','sim.flashStatus':'📥 Flash Status','sim.appValid':'App Valid','sim.bootloader':'Bootloader','sim.didValues':'💾 DID Values','sim.editDID':'✏️ Edit DID','sim.logTitle':'📝 Message Log','sim.timeline':'📊 Timeline','sim.history':'📋 History','sim.emptyLog':'Waiting for diagnostic messages...','sim.emptyHint':'Use the composer on the right to send UDS requests, or click a scenario on the left','sim.composerTitle':'📤 Message Composer','sim.service':'Service (SID)','sim.subfunc':'Sub-function','sim.dataBytes':'Data Bytes (HEX, space separated)','sim.dataPlaceholder':'e.g. F1 90','sim.quickDID':'Quick DID:','sim.sendRequest':'📤 Send Request','sim.rawHex':'Raw HEX (auto-detect SID)','sim.rawPlaceholder':'e.g. 22 F1 90','sim.sendRaw':'📤 Send','sim.requestPreview':'Request Preview','sim.responsePreview':'Expected Response','sim.responsePos':'Positive','sim.responseNeg':'Negative','sim.decodeInfo':'Decode Info','sim.sectionISOTP':'🔗 ISO-TP Config','sim.isotpSTmin':'STmin (ms)','sim.isotpBlockSize':'Block Size','sim.isotpFFDelay':'FF Delay (ms)','sim.isotpCFDelay':'CF Delay (ms)','sim.sectionFlash':'📥 Flash Flow','sim.sectionError':'⚡ Error Injection','sim.sectionCAN':'🛞 CAN Bus Config','sim.sectionOBD2':'🛞 OBD-II Config','sim.sectionDoIP':'🌐 DoIP Config','sim.ecuTitle_A':'ECU_A — Engine Control Module (ECM)','sim.ecuTitle_B':'ECU_B — Transmission Control Module (TCM)','sim.ecuTitle_C':'ECU_C — Airbag Control Module (ABM)','did.F190':'F190 (VIN)','did.F191':'F191 (HW Ver)','did.F192':'F192 (SW Ver)','did.F193':'F193 (ECU Name)','did.F194':'F194 (Coolant)','did.F195':'F195 (RPM)','did.F196':'F196 (Speed)','did.F197':'F197 (Odometer)','did.F199':'F199 (Voltage)','did.F19A':'F19A (Ambient)','did.F19C':'F19C (Fuel)','sim.msgCount':'messages',
+    'sim.title':'🔌 UDS Simulator','sim.badge':'ISO 14229-1:2020','sim.clearLog':'🗑️ Clear Log','sim.resetECU':'🔄 Reset ECU','sim.autoTP':'⏱️ Auto TP: Off','sim.autoTP.on':'⏱️ Auto TP: On','sim.targetECU':'🎯 Target ECU:','sim.session':'Session','sim.security':'Security','sim.p2':'P2 (ms)','sim.p2star':'P2* (ms)','sim.s3':'S3 (ms)','sim.comm':'Comm Mode','sim.counter':'📊 Counters','sim.rxCount':'Rx Messages','sim.txCount':'Tx Messages','sim.posCount':'Positive','sim.negCount':'Negative','sim.scenarios':'📋 Scenarios','sim.dtcInject':'⚡ DTC Injection','sim.openDTC':'⚡ Open DTC Injector','sim.flashStatus':'📥 Flash Status','sim.appValid':'App Valid','sim.bootloader':'Bootloader','sim.didValues':'💾 DID Values','sim.editDID':'✏️ Edit DID','sim.logTitle':'📝 Message Log','sim.timeline':'📊 Timeline','sim.history':'📋 History','sim.emptyLog':'Waiting for diagnostic messages...','sim.emptyHint':'Use the composer on the right to send UDS requests, or click a scenario on the left','sim.composerTitle':'📤 Message Composer','sim.service':'Service (SID)','sim.subfunc':'Sub-function','sim.dataBytes':'Data Bytes (HEX, space separated)','sim.dataPlaceholder':'e.g. F1 90','sim.quickDID':'Quick DID:','sim.sendRequest':'📤 Send Request','sim.rawHex':'Raw HEX (auto-detect SID)','sim.rawPlaceholder':'e.g. 22 F1 90','sim.sendRaw':'📤 Send','sim.requestPreview':'Request Preview','sim.responsePreview':'Expected Response','sim.responsePos':'Positive','sim.responseNeg':'Negative','sim.decodeInfo':'Decode Info','sim.sectionISOTP':'🔗 ISO-TP Config','sim.isotpSTmin':'STmin (ms)','sim.isotpBlockSize':'Block Size','sim.isotpFFDelay':'FF Delay (ms)','sim.isotpCFDelay':'CF Delay (ms)','sim.sectionFlash':'📥 Flash Flow','sim.sectionError':'⚡ Error Injection','sim.sectionCAN':'🛞 CAN Bus Config','sim.sectionOBD2':'🛞 OBD-II Config','sim.sectionDoIP':'🌐 DoIP Config','sim.ecuTitle_A':'ECU_A — Engine Control Module (ECM)','sim.ecuTitle_B':'ECU_B — Transmission Control Module (TCM)','sim.ecuTitle_C':'ECU_C — Airbag Control Module (ABM)','did.F190':'F190 (VIN)','did.F191':'F191 (ECU HW No.)','did.F192':'F192 (ECU SW No.)','did.F193':'F193 (System Name)','did.F194':'F194 (Coolant)','did.F195':'F195 (RPM)','did.F196':'F196 (Speed)','did.F197':'F197 (Odometer)','did.F199':'F199 (Voltage)','did.F19A':'F19A (Ambient)','did.F19C':'F19C (Fuel)','sim.msgCount':'messages',
     'scenario.default':'🔵 Enter Default Session','scenario.extended':'🟡 Enter Extended Session','scenario.programming':'🔴 Enter Programming Session','scenario.tp':'💓 TesterPresent','scenario.readVin':'🔍 Read VIN (DID F190)','scenario.readDTC':'⚠️ Read DTC Status','scenario.security':'🔐 SecurityAccess (Seed→Key)','scenario.reset':'🔄 ECU Hard Reset','scenario.fullDiag':'📋 Full Diagnostic Flow','scenario.clearDTC':'🧹 Clear DTC','scenario.readMulti':'📊 Batch Read DID','scenario.routine':'🔧 Start Checksum Routine','scenario.download':'📥 Download Flow','scenario.isotp':'🔗 ISO-TP Multi-frame Demo','scenario.flash':'📥 Full Flash Flow (Multi-frame)',
     'scenario.desc.default':'10 01 → defaultSession','scenario.desc.extended':'10 03 → extendedDiagnosticSession','scenario.desc.programming':'10 02 → programmingSession','scenario.desc.tp':'3E 00 → keep session alive','scenario.desc.readVin':'22 F1 90 → VIN code','scenario.desc.readDTC':'19 02 → report DTC by status','scenario.desc.security':'27 01 → request seed → 27 02 send key','scenario.desc.reset':'11 01 → hardReset','scenario.desc.fullDiag':'Extended → Security → Read → Program...','scenario.desc.clearDTC':'14 FF FF FF → clear all DTCs','scenario.desc.readMulti':'22 F1 90 F1 92 F1 93 → batch DID read','scenario.desc.routine':'31 01 FF 02 → start Checksum routine','scenario.desc.download':'34 → 36 → 37 complete download sequence','scenario.desc.isotp':'30 bytes → FF+FC+CF+CF+CF+CF → UDS process','scenario.desc.flash':'10→27→31→34→36×8→37→Reset full flash flow',
     'sim.dtcInjector':'⚡ DTC Injector','sim.dtcList':'DTC List','sim.addDTC':'➕ Add DTC','sim.closeDTC':'Close','sim.didEditor':'✏️ DID Editor','sim.didName':'DID','sim.didValue':'Current Value','sim.saveDID':'Save','sim.cancelDID':'Cancel','sim.historyTitle':'📋 History','sim.historyEmpty':'No history yet','sim.closeHistory':'Close','common.locked':'🔒 Locked','common.unlocked':'🔓 Unlocked','common.normal':'Normal','common.off':'Off','common.on':'On','common.valid':'✅ Valid','common.inactive':'⏹️ Inactive','common.invalid':'❌ Invalid','common.active':'▶ Active',
@@ -81,12 +81,12 @@ const ECU = {
     'F302': [0x00, 0x02],   // Application software version
   },
   didLabels: {
-    'F190': 'VIN 码', 'F191': '硬件版本号', 'F192': '软件版本号',
-    'F193': 'ECU 名称', 'F194': '发动机冷却液温度', 'F195': '发动机转速',
-    'F196': '车速', 'F197': '里程表', 'F198': '诊断代码',
-    'F199': 'ECU 供电电压', 'F19A': '环境温度', 'F19B': '总运行时间',
-    'F19C': '燃油液位', 'F300': 'VIN 特定数据', 'F301': 'Boot 软件版本',
-    'F302': '应用软件版本',
+    'F190': 'VIN 码 (车辆制造商定义)', 'F191': '系统供应商 ECU 硬件号', 'F192': '系统供应商 ECU 软件号',
+    'F193': 'ECU 系统名称', 'F194': '发动机冷却液温度', 'F195': '发动机转速',
+    'F196': '车速', 'F197': '里程表', 'F198': '诊断码',
+    'F199': 'ECU 供电电压', 'F19A': '环境空气温度', 'F19B': '总运行时间',
+    'F19C': '燃油液位', 'F300': '车辆制造商特定 DID', 'F301': 'Boot 软件版本号',
+    'F302': '应用软件版本号',
   },
   // Simulated DTCs
   dtcs: [
@@ -104,9 +104,7 @@ const ECU = {
 };
 
 // Deep clone of default DID values for reset functionality
-const DEFAULT_DIDS = Object.fromEntries(
-  Object.entries(ECU.dids).map(([k, v]) => [k, [...v]])
-);
+const DEFAULT_DIDS = JSON.parse(JSON.stringify(ECU.dids));
 
 // ======================== MULTI ECU SUPPORT ========================
 const ECU_CONFIGS = {
@@ -132,12 +130,12 @@ const ECU_CONFIGS = {
       'F300': [0x01],  'F301': [0x00, 0x01],  'F302': [0x00, 0x02],
     },
     didLabels: {
-      'F190': 'VIN 码', 'F191': '硬件版本号', 'F192': '软件版本号',
-      'F193': 'ECU 名称', 'F194': '发动机冷却液温度', 'F195': '发动机转速',
-      'F196': '车速', 'F197': '里程表', 'F198': '诊断代码',
-      'F199': 'ECU 供电电压', 'F19A': '环境温度', 'F19B': '总运行时间',
-      'F19C': '燃油液位', 'F300': 'VIN 特定数据', 'F301': 'Boot 软件版本',
-      'F302': '应用软件版本',
+      'F190': 'VIN 码 (车辆制造商定义)', 'F191': '系统供应商 ECU 硬件号', 'F192': '系统供应商 ECU 软件号',
+      'F193': 'ECU 系统名称', 'F194': '发动机冷却液温度', 'F195': '发动机转速',
+      'F196': '车速', 'F197': '里程表', 'F198': '诊断码',
+      'F199': 'ECU 供电电压', 'F19A': '环境空气温度', 'F19B': '总运行时间',
+      'F19C': '燃油液位', 'F300': '车辆制造商特定 DID', 'F301': 'Boot 软件版本号',
+      'F302': '应用软件版本号',
     },
     dtcs: [
       { id: 'P0101', high: 0x01, middle: 0x01, low: 0x01, status: 0x29, severity: 0x50 },
@@ -167,11 +165,11 @@ const ECU_CONFIGS = {
       'F198': [0x00, 0x00],  'F300': [0x01],  'F301': [0x00, 0x01],  'F302': [0x00, 0x02],
     },
     didLabels: {
-      'F190': 'TCM 零件号', 'F191': '硬件版本', 'F192': '软件版本',
-      'F193': '控制器名称', 'F194': '变速箱油温', 'F195': '输入转速',
-      'F196': '输出转速', 'F197': '行驶里程', 'F198': '诊断代码',
-      'F199': '供电电压', 'F19A': '环境温度', 'F19C': '油位',
-      'F300': 'VIN 特定数据', 'F301': 'Boot 软件版本', 'F302': '应用软件版本',
+      'F190': 'TCM 零件号', 'F191': '硬件版本号', 'F192': '软件版本号',
+      'F193': '系统名称', 'F194': '变速箱油温', 'F195': '输入轴转速',
+      'F196': '输出轴转速', 'F197': '行驶里程', 'F198': '诊断码',
+      'F199': '供电电压', 'F19A': '环境空气温度', 'F19C': '油位',
+      'F300': '车辆制造商特定 DID', 'F301': 'Boot 软件版本号', 'F302': '应用软件版本号',
     },
     dtcs: [
       { id: 'P0700', high: 0x07, middle: 0x00, low: 0x00, status: 0x00, severity: 0x30 },
@@ -199,11 +197,11 @@ const ECU_CONFIGS = {
       'F198': [0x00, 0x00],  'F300': [0x01],  'F301': [0x00, 0x01],  'F302': [0x00, 0x02],
     },
     didLabels: {
-      'F190': 'ABM 零件号', 'F191': '硬件版本', 'F192': '软件版本',
-      'F193': '控制器名称', 'F194': '内部温度', 'F195': '状态',
-      'F196': '状态', 'F197': '状态', 'F198': '诊断代码',
-      'F199': '供电电压', 'F19A': '环境温度', 'F19C': '状态',
-      'F300': 'VIN 特定数据', 'F301': 'Boot 软件版本', 'F302': '应用软件版本',
+      'F190': 'ABM 零件号', 'F191': '硬件版本号', 'F192': '软件版本号',
+      'F193': '系统名称', 'F194': '内部温度', 'F195': '状态',
+      'F196': '状态', 'F197': '状态', 'F198': '诊断码',
+      'F199': '供电电压', 'F19A': '环境空气温度', 'F19C': '状态',
+      'F300': '车辆制造商特定 DID', 'F301': 'Boot 软件版本号', 'F302': '应用软件版本号',
     },
     dtcs: [
       { id: 'B0010', high: 0xB0, middle: 0x01, low: 0x00, status: 0x00, severity: 0x30 },
@@ -230,6 +228,7 @@ function saveECUState() {
   cfg.S3 = ECU.S3;
   cfg.communication = ECU.communication;
   cfg.dtcSetting = ECU.dtcSetting;
+  cfg.dtcStatus = [...ECU.dtcStatus];
   cfg.uploadSession = ECU.uploadSession;
   cfg.blockSequenceCounter = ECU.blockSequenceCounter;
   cfg.flashState = { ...ECU.flashState };
@@ -259,6 +258,7 @@ function switchECU(id) {
   ECU.S3 = cfg.S3;
   ECU.communication = cfg.communication;
   ECU.dtcSetting = cfg.dtcSetting;
+  ECU.dtcStatus = [...cfg.dtcStatus];
   ECU.uploadSession = cfg.uploadSession;
   ECU.blockSequenceCounter = cfg.blockSequenceCounter;
   ECU.flashState = { ...cfg.flashState };
@@ -316,9 +316,10 @@ const SID_INFO = {
       '02': 'disableRxAndEnableTx', '03': 'disableRxAndTx' } },
   0x29: { name: 'Authentication', short: 'Auth', unit: 'diagnostic-communication',
     hasSF: true, reqSID: '29', resSID: '69',
-    sfs: { '00': 'deAuthenticate', '01': 'verifyCertificateUnidirectional',
-      '02': 'verifyCertificateBidirectional', '03': 'proofOfOwnership',
-      '04': 'transmitCertificate', '05': 'requestChallengeForAuthentication' } },
+    sfs: { '01': 'authenticateUser', '02': 'deAuthenticate',
+      '03': 'getCertificateRequest', '04': 'sendCertificate',
+      '05': 'getChallengeRequest', '06': 'sendChallengeResponse',
+      '07': 'getAuthenticationResult', '08': 'verifyCertificate' } },
   0x2A: { name: 'ReadDataByPeriodicIdentifier', short: 'RDBPI', unit: 'data-transmission',
     hasSF: false, reqSID: '2A', resSID: '6A' },
   0x2C: { name: 'DynamicallyDefineDataIdentifier', short: 'DDDI', unit: 'data-transmission',
@@ -1201,19 +1202,21 @@ function handleLinkControl(sf, data, suppress) {
 function handleAuthentication(sf, data, fullReq, suppress) {
   if (sf === undefined || sf === null) return negResp(0x29, NRC.IMLOIF);
   const resSID = 0x69;
+  // ISO 14229-1:2020 standard subfunctions
   const authTasks = {
-    0x00: 'deAuthenticate', 0x01: 'verifyCertificateUnidirectional',
-    0x02: 'verifyCertificateBidirectional', 0x03: 'proofOfOwnership',
-    0x04: 'transmitCertificate', 0x05: 'requestChallengeForAuthentication'
+    0x01: 'authenticateUser', 0x02: 'deAuthenticate',
+    0x03: 'getCertificateRequest', 0x04: 'sendCertificate',
+    0x05: 'getChallengeRequest', 0x06: 'sendChallengeResponse',
+    0x07: 'getAuthenticationResult', 0x08: 'verifyCertificate'
   };
   const taskName = authTasks[sf] || `0x${sf.toString(16).padStart(2,'0')}`;
 
-  if (sf === 0x00) {
+  if (sf === 0x02) {
     // deAuthenticate — re-lock security
     ECU.securityLevel = 0;
     updateECUStatus();
   }
-  return { sid: resSID, payload: [sf], desc: `🔐 Authentication: ${taskName} ${sf === 0x00 ? '— 已解除认证' : '(模拟响应)'}` };
+  return { sid: resSID, payload: [sf], desc: `🔐 Authentication: ${taskName} ${sf === 0x02 ? '— 已解除认证' : '(模拟响应)'}` };
 }
 
 function handleSecuredDataTransmission(sf, data, suppress) {
@@ -1352,7 +1355,7 @@ function saveDIDChanges() {
   }
   updateECUStatus();
   closeDIDEditor();
-  showToast('🔄 DID 已重置为默认值', 'success');
+  showToast('🔄 DID 已保存', 'success');
 }
 
 // ======================== DTC INJECTOR ========================
@@ -1445,10 +1448,18 @@ function clearAllDTCs() {
 }
 
 // ======================== MESSAGE LOG ========================
+const MAX_LOG_DOM_ENTRIES = 200;
 function addLogEntry(bytes, desc, type, reqBytes) {
   const container = document.getElementById('log-container');
   const empty = document.getElementById('empty-state');
   if (empty) empty.style.display = 'none';
+
+  // Trim old DOM entries to prevent unbounded growth
+  const entries = container.querySelectorAll('.msg-entry');
+  const excess = entries.length - (MAX_LOG_DOM_ENTRIES - 1);
+  for (let i = 0; i < excess; i++) {
+    if (entries[i]) entries[i].remove();
+  }
 
   const ts = new Date();
   const timeStr = ts.toLocaleTimeString('zh-CN', { hour12: false }) + '.' +
@@ -2931,6 +2942,7 @@ function stopErrorDemo() {
 // ======================== CAN BUS MONITOR ========================
 let canFrameEntries = [];
 const CAN_MAX_FRAMES = 50;
+let canUIInterval = null;
 
 let canConfig = {
   format: '2.0A',
@@ -2989,6 +3001,12 @@ function logCANFrame(bytes, direction) {
 function renderCANFrame(frame) {
   const listEl = document.getElementById('can-frame-list');
   if (!listEl) return;
+
+  // Trim old DOM entries to prevent unbounded growth
+  const MAX_CAN_DOM = 100;
+  while (listEl.children.length >= MAX_CAN_DOM) {
+    listEl.removeChild(listEl.firstChild);
+  }
 
   // Remove empty state if present
   const emptyEl = listEl.querySelector('.can-empty');
@@ -3089,20 +3107,20 @@ function updateCANBusState() {
 }
 
 function calculateCANBusLoad() {
-  var now2 = performance.now();
+  const now2 = performance.now();
   canConfig.frameTimestamps = canConfig.frameTimestamps.filter(function(f) { return now2 - f.time < 1000; });
-  var totalBits = canConfig.frameTimestamps.reduce(function(s, f) { return s + f.bits; }, 0);
+  const totalBits = canConfig.frameTimestamps.reduce(function(s, f) { return s + f.bits; }, 0);
   return Math.min(100, Math.round((totalBits / 1000000) * 100));
 }
 
 function updateCANEnhancedUI() {
-  var stateEl = document.getElementById('can-bus-state');
-  var tecEl = document.getElementById('can-tec');
-  var recEl = document.getElementById('can-rec');
-  var loadEl = document.getElementById('can-load');
+  const stateEl = document.getElementById('can-bus-state');
+  const tecEl = document.getElementById('can-tec');
+  const recEl = document.getElementById('can-rec');
+  const loadEl = document.getElementById('can-load');
   if (stateEl) {
-    var states = {active:['Error Active','var(--success)'],passive:['Error Passive','var(--warning,#f59e0b)'],'bus-off':['Bus Off','var(--danger,#ef4444)']};
-    var s = states[canConfig.busState]||states.active;
+    const states = {active:['Error Active','var(--success)'],passive:['Error Passive','var(--warning,#f59e0b)'],'bus-off':['Bus Off','var(--danger,#ef4444)']};
+    const s = states[canConfig.busState]||states.active;
     stateEl.textContent = s[0]; stateEl.style.color = s[1];
   }
   if (tecEl) tecEl.textContent = canConfig.tec;
@@ -3111,16 +3129,17 @@ function updateCANEnhancedUI() {
 }
 
 (function initCANUI() {
-  var fmtSel = document.getElementById('can-format-select');
+  const fmtSel = document.getElementById('can-format-select');
   if (fmtSel) fmtSel.addEventListener('change', function() { canConfig.format = this.value; });
-  var annToggle = document.getElementById('can-annotate-toggle');
+  const annToggle = document.getElementById('can-annotate-toggle');
   if (annToggle) annToggle.addEventListener('change', function() { canConfig.annotate = this.checked; updateCANEnhancedUI(); });
-  setInterval(updateCANEnhancedUI, 500);
+  canUIInterval = setInterval(updateCANEnhancedUI, 500);
 })();
 
 // LIN Bus Engine
-var linState = { mode: 'master', active: false, frames: [], scheduleActive: false, currentSlot: 0, maxFrames: 50 };
-var LIN_SCHEDULE = [
+let linState = { mode: 'master', active: false, frames: [], scheduleActive: false, currentSlot: 0, maxFrames: 50 };
+let linScheduleTimer = null;
+const LIN_SCHEDULE = [
   { id: 0x10, name: '车速', period: '10ms' },
   { id: 0x11, name: '转速', period: '10ms' },
   { id: 0x12, name: '水温', period: '100ms' },
@@ -3129,8 +3148,8 @@ var LIN_SCHEDULE = [
 ];
 
 function toggleLINPanel() {
-  var body = document.getElementById('lin-body');
-  var toggle = document.getElementById('lin-toggle');
+  const body = document.getElementById('lin-body');
+  const toggle = document.getElementById('lin-toggle');
   if (!body || !toggle) return;
   body.classList.toggle('open');
   toggle.classList.toggle('open');
@@ -3138,20 +3157,20 @@ function toggleLINPanel() {
 
 function setLINMode(mode) { linState.mode = mode; updateLINStatusDisplay(); }
 
-function calculateLINParity(id) { var p0 = ((id>>0)&1)^((id>>1)&1)^((id>>2)&1)^((id>>4)&1); var p1 = ~(((id>>1)&1)^((id>>3)&1)^((id>>4)&1)^((id>>5)&1))&1; return (id&0x3F)|(p0<<6)|(p1<<7); }
+function calculateLINParity(id) { const p0 = ((id>>0)&1)^((id>>1)&1)^((id>>2)&1)^((id>>4)&1); const p1 = ~(((id>>1)&1)^((id>>3)&1)^((id>>4)&1)^((id>>5)&1))&1; return (id&0x3F)|(p0<<6)|(p1<<7); }
 
 function calculateLINChecksum(data, pid, enhanced) {
-  var sum = enhanced ? pid : 0;
-  for (var i=0;i<data.length;i++){ sum += data[i]; if(sum>=256)sum=(sum&0xFF)+(sum>>8); }
+  let sum = enhanced ? pid : 0;
+  for (let i=0;i<data.length;i++){ sum += data[i]; if(sum>=256)sum=(sum&0xFF)+(sum>>8); }
   return (~sum)&0xFF;
 }
 
 function sendLINFrame(id, data) {
-  var pid = calculateLINParity(id);
+  const pid = calculateLINParity(id);
   // ISO 17987-3:2016 §5.2.2.7: 0x3C/0x3D always classic, 0x00-0x3B enhanced
-  var isDiag = (id === 0x3C || id === 0x3D);
-  var checksum = calculateLINChecksum(data, isDiag ? 0 : pid, !isDiag);
-  var frame = { time: new Date().toLocaleTimeString(), dir: linState.mode==='master'?'M→S':'S→M', pid: pid, data: data, chk: checksum };
+  const isDiag = (id === 0x3C || id === 0x3D);
+  const checksum = calculateLINChecksum(data, isDiag ? 0 : pid, !isDiag);
+  const frame = { time: new Date().toLocaleTimeString(), dir: linState.mode==='master'?'M→S':'S→M', pid: pid, data: data, chk: checksum };
   linState.frames.unshift(frame);
   if (linState.frames.length > linState.maxFrames) linState.frames.pop();
   renderLINFrameList();
@@ -3159,54 +3178,60 @@ function sendLINFrame(id, data) {
 }
 
 function sendLINWakeUp() {
-  var el = document.getElementById('lin-frame-list'); if (!el) return;
-  var div = document.createElement('div');
+  const el = document.getElementById('lin-frame-list'); if (!el) return;
+  const div = document.createElement('div');
   div.className = 'lin-frame';
   div.innerHTML = '<span class="lin-time">' + new Date().toLocaleTimeString() + '</span><span class="lin-dir" style="color:#f59e0b">⚡</span><span class="lin-pid">WAKE</span><span class="lin-data">250μs dominant pulse</span>';
   el.prepend(div);
-  var led = document.getElementById('lin-bus-led'); if (led) { led.className = 'lin-bus-led wake'; setTimeout(function(){led.className='lin-bus-led active';},500); }
+  const led = document.getElementById('lin-bus-led'); if (led) { led.className = 'lin-bus-led wake'; setTimeout(function(){led.className='lin-bus-led active';},500); }
 }
 
 function sendLINSleep() {
   sendLINFrame(0x3C, [0x00]);
-  var led = document.getElementById('lin-bus-led');
+  const led = document.getElementById('lin-bus-led');
   if (led) { led.className = 'lin-bus-led idle'; }
-  var label = document.getElementById('lin-bus-label');
+  const label = document.getElementById('lin-bus-label');
   if (label) label.textContent = 'Sleep';
 }
 
 function runLINMasterSchedule() {
-  if (linState.scheduleActive) { linState.scheduleActive = false; updateLINStatusDisplay(); return; }
+  if (linState.scheduleActive) {
+    // Stop running schedule
+    linState.scheduleActive = false;
+    if (linScheduleTimer) { clearTimeout(linScheduleTimer); linScheduleTimer = null; }
+    updateLINStatusDisplay();
+    return;
+  }
   linState.scheduleActive = true;
   updateLINStatusDisplay();
   renderLINSchedule();
   function sendNext() {
     if (!linState.scheduleActive) return;
-    var entry = LIN_SCHEDULE[linState.currentSlot % LIN_SCHEDULE.length];
-    var data = [];
-    for (var i=0;i<4;i++) data.push(Math.floor(Math.random()*256));
+    const entry = LIN_SCHEDULE[linState.currentSlot % LIN_SCHEDULE.length];
+    const data = [];
+    for (let i=0;i<4;i++) data.push(Math.floor(Math.random()*256));
     sendLINFrame(entry.id, data);
     linState.currentSlot++;
-    setTimeout(sendNext, 600);
+    linScheduleTimer = setTimeout(sendNext, 600);
   }
   sendNext();
 }
 
 function renderLINFrameList() {
-  var el = document.getElementById('lin-frame-list'); if (!el) return;
-  var h = '';
-  for (var i=0;i<linState.frames.length;i++) {
-    var f = linState.frames[i];
+  const el = document.getElementById('lin-frame-list'); if (!el) return;
+  let h = '';
+  for (let i=0;i<linState.frames.length;i++) {
+    const f = linState.frames[i];
     h += '<div class="lin-frame"><span class="lin-time">' + f.time + '</span><span class="lin-dir">' + f.dir + '</span><span class="lin-pid">0x' + f.pid.toString(16).toUpperCase().padStart(2,'0') + '</span><span class="lin-data">' + f.data.map(function(b){return b.toString(16).toUpperCase().padStart(2,'0');}).join(' ') + '</span><span class="lin-chk">0x' + f.chk.toString(16).toUpperCase().padStart(2,'0') + '</span></div>';
   }
   el.innerHTML = h || '<div class="lin-empty">No LIN frames</div>';
-  var countEl = document.getElementById('lin-frame-count');
+  const countEl = document.getElementById('lin-frame-count');
   if (countEl) countEl.textContent = linState.frames.length;
 }
 
 function renderLINSchedule() {
-  var el = document.getElementById('lin-schedule-list'); if (!el) return;
-  var h = '';
+  const el = document.getElementById('lin-schedule-list'); if (!el) return;
+  let h = '';
   LIN_SCHEDULE.forEach(function(e) {
     h += '<div class="lin-schedule-item"><span class="lin-sched-id">0x' + e.id.toString(16).toUpperCase() + '</span><span class="lin-sched-desc">' + e.name + ' (' + e.period + ')</span></div>';
   });
@@ -3216,20 +3241,26 @@ function renderLINSchedule() {
 function clearLINLog() { linState.frames = []; renderLINFrameList(); }
 
 function updateLINStatusDisplay() {
-  var label = document.getElementById('lin-bus-label');
+  const label = document.getElementById('lin-bus-label');
   if (label) label.textContent = linState.scheduleActive ? 'Running (' + linState.mode + ')' : (linState.mode === 'master' ? 'Master Idle' : 'Slave Idle');
-  var led = document.getElementById('lin-bus-led');
+  const led = document.getElementById('lin-bus-led');
   if (led) led.className = 'lin-bus-led' + (linState.scheduleActive ? ' active' : ' idle');
 }
 
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(function() {
-    var fmtSel = document.getElementById('can-format-select');
+    const fmtSel = document.getElementById('can-format-select');
     if (fmtSel) fmtSel.addEventListener('change', function() { canConfig.format = this.value; });
-    var annToggle = document.getElementById('can-annotate-toggle');
+    const annToggle = document.getElementById('can-annotate-toggle');
     if (annToggle) annToggle.addEventListener('change', function() { canConfig.annotate = this.checked; });
-    setInterval(updateCANEnhancedUI, 500);
+    if (canUIInterval) clearInterval(canUIInterval);
+    canUIInterval = setInterval(updateCANEnhancedUI, 500);
   }, 300);
+});
+
+// Cleanup interval on page unload
+window.addEventListener('beforeunload', function() {
+  if (canUIInterval) clearInterval(canUIInterval);
 });
 
 // ======================== DoIP (ISO 13400) ========================

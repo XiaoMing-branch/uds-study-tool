@@ -4,6 +4,11 @@ const ASSETS = [
   '/uds-study-tool/uds_learning_tool.html',
   '/uds-study-tool/uds_simulator.html',
   '/uds-study-tool/manifest.json',
+  '/uds-study-tool/js/learning-tool.js',
+  '/uds-study-tool/js/simulator.js',
+  '/uds-study-tool/css/learning-tool.css',
+  '/uds-study-tool/css/simulator.css',
+  '/uds-study-tool/css/shared.css',
 ];
 
 // Install event: cache all static assets

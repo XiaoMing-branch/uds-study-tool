@@ -28,6 +28,7 @@ const SERVICES = [
       { val: '01', name: 'defaultSession', desc: '默认会话 — 基本诊断功能' },
       { val: '02', name: 'programmingSession', desc: '编程会话 — 允许 ECU 编程/刷新' },
       { val: '03', name: 'extendedDiagnosticSession', desc: '扩展诊断会话 — 扩展的诊断功能' },
+      { val: '04', name: 'safetySystemDiagnosticSession', desc: '安全系统诊断会话' },
       { val: '40-5F', name: 'vehicleManufacturerSpecific', desc: '制造商特定会话' },
       { val: '60-7E', name: 'ecuManufacturerSpecific', desc: 'ECU 制造商特定会话' }
     ],
