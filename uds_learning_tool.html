@@ -26,9 +26,6 @@
       <button class="nav-btn" data-tab="builder">
         🧱 消息构造器
       </button>
-      <button class="nav-btn" data-tab="quiz">
-        🧪 知识测验
-      </button>
       <button class="nav-btn" data-tab="canbus">🚌 CAN 总线</button>
       <button class="nav-btn" data-tab="linbus">📡 LIN 总线</button>
     </nav>
@@ -202,26 +199,7 @@
       </div>
     </div>
 
-    <!-- Tab 6: Quiz -->
-    <div class="tab-content" id="tab-quiz">
-      <h2 class="section-title">🧪 UDS 知识测验</h2>
-      <p class="section-subtitle">测试你对 ISO 14229-1 诊断协议的理解</p>
-      <div class="search-box">
-        <select id="quiz-topic" onchange="startQuiz()">
-          <option value="all">全部题目</option>
-          <option value="sid">服务标识符 (SID)</option>
-          <option value="nrc">负响应码 (NRC)</option>
-          <option value="session">诊断会话</option>
-          <option value="general">基础知识</option>
-          <option value="can">CAN 总线</option>
-          <option value="lin">LIN 总线</option>
-        </select>
-        <button class="nav-btn" style="background:var(--primary);color:#fff;padding:.5rem 1.2rem;border-radius:8px;width:auto" onclick="startQuiz()">重新开始</button>
-      </div>
-      <div id="quiz-content"></div>
-    </div>
-
-    <!-- Tab 7: CAN Bus -->
+    <!-- Tab 6: CAN Bus -->
     <div class="tab-content" id="tab-canbus">
       <h2 class="section-title">🚌 CAN 总线</h2>
       <p class="section-subtitle">CAN 总线通信内容加载中...</p>

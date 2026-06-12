@@ -394,57 +394,6 @@ const SESSIONS = [
     services: ['10', '11', '14', '19', '22', '23', '24', '27', '28', '29', '2A', '2C', '2E', '2F', '31', '3D', '3E', '85', '86', '87'] }
 ];
 
-// Quiz data
-const QUIZ = [
-  { q: 'UDS 代表什么？', a: 1, opts: ['Unified Data System', 'Unified Diagnostic Services', 'Universal Diagnostic Standard', 'Underbody Diagnostic System'], topic: 'general', explain: 'UDS = Unified Diagnostic Services（统一诊断服务），定义在 ISO 14229-1 标准中。' },
-  { q: 'UDS 的完整标准编号是什么？', a: 3, opts: ['ISO 14230', 'ISO 15765', 'ISO 14229-1:2020', 'ISO 11898'], topic: 'general', explain: 'UDS 应用层标准为 ISO 14229-1，当前最新版本为 2020 版。' },
-  { q: '诊断会话控制服务的 SID 是多少？', a: 2, opts: ['0x11', '0x10', '0x3E', '0x22'], topic: 'sid', explain: 'DiagnosticSessionControl 的 SID = 0x10。' },
-  { q: 'TesterPresent 服务的 SID 是多少？', a: 1, opts: ['0x3E', '0x3D', '0x7E', '0x3F'], topic: 'sid', explain: 'TesterPresent 的 SID = 0x3E。它用于保持非默认会话活跃。' },
-  { q: 'ECUReset 服务的 SID 是多少？', a: 3, opts: ['0x10', '0x14', '0x11', '0x51'], topic: 'sid', explain: 'ECUReset 的 SID = 0x11，正响应 SID = 0x51。' },
-  { q: 'ReadDataByIdentifier 服务的 SID 是多少？', a: 0, opts: ['0x22', '0x2E', '0x19', '0x23'], topic: 'sid', explain: 'ReadDataByIdentifier (RDBI) 的 SID = 0x22。' },
-  { q: 'UDS 正响应 SID 是如何计算的？', a: 2, opts: ['SID + 0x20', 'SID + 0x60', 'SID + 0x40', 'SID + 0x80'], topic: 'general', explain: '正响应 SID = 请求 SID + 0x40。例如请求 0x22 的正响应为 0x62。' },
-  { q: 'UDS 负响应消息的第一个字节是什么？', a: 1, opts: ['0x7E', '0x7F', '0x80', '0x00'], topic: 'general', explain: '负响应消息格式：0x7F + 请求 SID + NRC（负响应码）。' },
-  { q: 'NRC 0x11 表示什么？', a: 2, opts: ['子功能不支持', '一般拒绝', '服务不支持', '消息格式无效'], topic: 'nrc', explain: 'NRC 0x11 = serviceNotSupported (SNS)，服务器不支持请求的服务。' },
-  { q: 'NRC 0x22 表示什么？', a: 0, opts: ['条件不正确', '请求序列错误', '安全访问被拒绝', '请求超出范围'], topic: 'nrc', explain: 'NRC 0x22 = conditionsNotCorrect (CNC)，服务器前提条件未满足。' },
-  { q: 'NRC 0x13 表示什么？', a: 3, opts: ['服务不支持', '请求超时', '响应太长', '消息长度不正确或格式无效'], topic: 'nrc', explain: 'NRC 0x13 = incorrectMessageLengthOrInvalidFormat (IMLOIF)。' },
-  { q: 'NRC 0x78 的特殊用途是什么？', a: 1, opts: ['表示致命错误', '表示请求已接收但操作进行中，稍后发送最终响应', '表示安全访问成功', '表示会话已切换'], topic: 'nrc', explain: 'NRC 0x78 = requestCorrectlyReceived-ResponsePending (RCRRP)。用于需长时间处理的操作，服务器稍后会发送最终正响应或负响应。' },
-  { q: 'UDS 默认会话的 sessionType 值是多少？', a: 0, opts: ['0x01', '0x02', '0x03', '0x00'], topic: 'session', explain: '默认会话 (defaultSession) = 0x01。ECU 上电后自动进入默认会话。' },
-  { q: '以下哪个服务属于"数据传输"功能单元？', a: 3, opts: ['ECUReset', 'TesterPresent', 'RoutineControl', 'WriteDataByIdentifier'], topic: 'general', explain: 'WriteDataByIdentifier (0x2E) 属于数据传输功能单元。ECUReset 和 TesterPresent 属于诊断与通信管理，RoutineControl 属于例行程序功能单元。' },
-  { q: 'SecurityAccess 服务的子功能 0x01 和 0x02 分别表示什么？', a: 1, opts: ['发送密钥 / 请求种子', '请求种子 / 发送密钥', '锁定 / 解锁', '加密 / 解密'], topic: 'general', explain: '奇数子功能 (0x01, 0x03...) 用于请求种子 (requestSeed)，偶数子功能 (0x02, 0x04...) 用于发送密钥 (sendKey)。' },
-  { q: 'DID 的完整长度是多少？', a: 0, opts: ['2 字节', '1 字节', '4 字节', '不固定'], topic: 'general', explain: 'DID (Data Identifier) 为 2 字节值，范围 0x0000-0xFFFF。' },
-  { q: '以下哪个服务用于清除 DTC？', a: 2, opts: ['0x19', '0x22', '0x14', '0x85'], topic: 'sid', explain: 'ClearDiagnosticInformation 的 SID = 0x14，用于清除 DTC。' },
-  { q: 'RequestDownload (0x34) 通常与哪些服务配合使用？', a: 2, opts: ['0x22 + 0x2E', '0x27 + 0x3E', '0x36 + 0x37', '0x31 + 0x85'], topic: 'general', explain: 'RequestDownload (0x34) + TransferData (0x36) + RequestTransferExit (0x37) 组成下载序列。' },
-  { q: '以下哪个 NRC 表示"请求序列错误"？', a: 3, opts: ['0x22', '0x31', '0x13', '0x24'], topic: 'nrc', explain: 'requestSequenceError = 0x24。常见于 SecurityAccess 或 RoutineControl 的顺序要求错误。' },
-  { q: '编程会话的 sessionType 值是多少？', a: 1, opts: ['0x01', '0x02', '0x03', '0x10'], topic: 'session', explain: '编程会话 (programmingSession) = 0x02。' },
-  { q: 'RoutineControl (0x31) 的三种子功能是什么？', a: 3, opts: ['读/写/执行', '创建/删除/修改', '打开/关闭/切换', '启动/停止/请求结果'], topic: 'general', explain: '三种子功能：01=startRoutine, 02=stopRoutine, 03=requestRoutineResults。' },
-  { q: '以下哪个服务提供种子-密钥安全机制？', a: 0, opts: ['SecurityAccess (0x27)', 'Authentication (0x29)', 'SecuredDataTransmission (0x84)', 'CommunicationControl (0x28)'], topic: 'general', explain: 'SecurityAccess (0x27) 使用种子-密钥机制。Authentication (0x29) 是 2020 版新增的 PKI/挑战-应答认证服务。' },
-  { q: 'NRC 值 0x7E 表示什么？', a: 2, opts: ['服务在当前会话中不支持', '子功能不支持', '子功能在当前会话中不支持', '一般拒绝'], topic: 'nrc', explain: '0x7E = subFunctionNotSupportedInActiveSession (SFNSIAS)。子功能在其他会话中支持，但当前会话不支持。' },
-  { q: '以下哪个是 CAN 总线是 UDS 传输层协议？', a: 0, opts: ['ISO 15765-2 (CAN TP / DoCAN)', 'CAN 2.0B', 'CAN FD', 'LIN 2.1'], topic: 'general', explain: 'ISO 15765-2 (DoCAN - Diagnostics on CAN) 是 UDS over CAN 的传输层和网络层协议。' },
-  { q: 'UDS 消息中 suppressPosRspMsgIndicationBit 的作用是什么？', a: 1, opts: ['关闭所有通信', '抑制正响应消息（bit7=1 时不发正响应）', '抑制负响应消息', '启用快速响应模式'], topic: 'general', explain: '子功能参数的 bit7 为 suppressPosRspMsgIndicationBit。设置为 1 时，服务器不发送正响应消息。' },
-  { q: 'NRC 0x33 表示什么？', a: 2, opts: ['密钥无效', '需要认证', '安全访问被拒绝', '需要安全数据传输'], topic: 'nrc', explain: '0x33 = securityAccessDenied (SAD)。服务器安全策略未满足。' },
-  // CAN quiz
-  { q: 'CAN 2.0A 标准帧的仲裁场 ID 是多少位？', a: 1, opts: ['29 bit', '11 bit', '18 bit', '8 bit'], topic: 'can', explain: 'CAN 2.0A 标准帧使用 11-bit ID。CAN 2.0B 扩展帧使用 29-bit ID。' },
-  { q: 'CAN 总线仲裁使用的机制是？', a: 0, opts: ['CSMA/CR (载波监听/冲突解决)', 'CSMA/CD (冲突检测)', 'Token Ring', '主从轮询'], topic: 'can', explain: 'CAN使用CSMA/CR, 显性位覆盖隐性位实现无损仲裁。ID越小优先级越高。' },
-  { q: 'CAN 帧中 CRC 场占用多少位？', a: 2, opts: ['8 bit', '16 bit', '15 bit', '32 bit'], topic: 'can', explain: 'CAN标准帧使用15-bit CRC(含1 bit分隔符)。' },
-  { q: 'CAN 发送节点如何检测 ACK 错误？', a: 1, opts: ['自己发送ACK位', '在ACK时隙采样总线, 若隐性则检测到ACK错误', '接收节点发错误帧', '由CRC替代'], topic: 'can', explain: '发送节点在ACK时隙发送隐性位, 若无节点拉为显性, 则ACK错误。' },
-  { q: 'Error Passive 状态节点检测到错误后？', a: 3, opts: ['发主动错误帧', '进入Bus Off', '停止通信', '发被动错误帧(6隐性位)'], topic: 'can', explain: 'Error Passive节点发被动错误标志(6个隐性位), 不干扰其他节点。TEC/REC>127进入此状态。' },
-  { q: 'CAN FD 相比 CAN 2.0 主要改进？', a: 2, opts: ['更长ID', '更高电压', '更高数据速率(≤8Mbps)+更长数据场(≤64bytes)', '增加4根信号线'], topic: 'can', explain: 'CAN FD支持≤8Mbps数据速率和64字节数据场, 向下兼容CAN 2.0。' },
-  // LIN quiz
-  { q: 'LIN 总线架构是？', a: 0, opts: ['单主多从', '多主', '对等网络', '星型'], topic: 'lin', explain: 'LIN采用单主多从架构。Master负责调度和报头, Slave响应。' },
-  { q: 'LIN 同步字节固定值？', a: 3, opts: ['0x00', '0x7F', '0xAA', '0x55'], topic: 'lin', explain: 'LIN同步字节固定为0x55(01010101), 用于从节点同步位时钟。' },
-  { q: 'LIN 总线最高速率？', a: 1, opts: ['125 kbps', '20 kbps', '1 Mbps', '500 kbps'], topic: 'lin', explain: 'LIN最高速率20 kbps(ISO 17987), 实际常用9.6k/10.4k/19.2k baud。' },
-  { q: 'LIN 调度表作用？', a: 2, opts: ['分配CAN ID', '配置从节点地址', '定义报文发送顺序和时间', '管理错误恢复'], topic: 'lin', explain: 'LIN调度表由Master维护, 定义报文帧发送顺序和时间间隙。' },
-  { q:'CAN 2.0A标准帧ID位数?',a:1,opts:['29bit','11bit','18bit','8bit'],topic:'can',explain:'CAN 2.0A使用11-bit ID。2.0B扩展帧使用29-bit ID。'},
-  { q:'CAN仲裁机制?',a:0,opts:['CSMA/CR','CSMA/CD','Token Ring','主从轮询'],topic:'can',explain:'CSMA/CR:显性位覆盖隐性位,ID越小优先级越高。'},
-  { q:'CAN CRC场位数?',a:2,opts:['8bit','16bit','15bit','32bit'],topic:'can',explain:'CAN标准帧15-bit CRC(含分隔符)。'},
-  { q:'CAN如何检测ACK错误?',a:1,opts:['自己发ACK','ACK时隙采样总线若隐性则检测到','接收节点发错误帧','CRC替代'],topic:'can',explain:'发送者在ACK时隙发隐性,无节点拉显性则ACK错误。'},
-  { q:'Error Passive节点行为?',a:3,opts:['发主动错误帧','进入Bus Off','停止通信','发被动错误帧(6隐性位)'],topic:'can',explain:'Error Passive发被动错误标志,不干扰其他节点。TEC/REC>127进入。'},
-  { q:'CAN FD主要改进?',a:2,opts:['更长ID','更高电压','更高速率(≤8Mbps)+更长数据场(≤64bytes)','增加4根线'],topic:'can',explain:'CAN FD支持≤8Mbps和64字节数据场,向下兼容。'},
-  { q:'LIN总线架构?',a:0,opts:['单主多从','多主','对等网络','星型'],topic:'lin',explain:'LIN单主多从。Master调度+报头,Slave响应。'},
-  { q:'LIN同步字节值?',a:3,opts:['0x00','0x7F','0xAA','0x55'],topic:'lin',explain:'0x55(01010101)用于从节点位时钟同步。'},
-  { q:'LIN最高速率?',a:1,opts:['125kbps','20kbps','1Mbps','500kbps'],topic:'lin',explain:'LIN≤20kbps(ISO17987),常用9.6/10.4/19.2k。'},
-  { q:'LIN调度表作用?',a:2,opts:['分配CAN ID','配置从节点地址','定义报文发送顺序和时间','管理错误恢复'],topic:'lin',explain:'由Master维护,定义帧发送顺序和时间间隙。'},
-];
 
 // ======================== RENDER ========================
 function renderServices(filterUnit = 'all', search = '') {
@@ -1241,87 +1190,7 @@ function getDataBytes(input) {
   return bytes;
 }
 
-// Quiz
-let quizState = { questions: [], index: 0, correct: 0, answered: false };
 
-function startQuiz() {
-  const topic = document.getElementById('quiz-topic').value;
-  let questions = [...QUIZ];
-  if (topic !== 'all') questions = questions.filter(q => q.topic === topic);
-  // Shuffle
-  for (let i = questions.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [questions[i], questions[j]] = [questions[j], questions[i]];
-  }
-  quizState = { questions, index: 0, correct: 0, answered: false };
-  renderQuiz();
-}
-
-function renderQuiz() {
-  const container = document.getElementById('quiz-content');
-  const { questions, index, correct } = quizState;
-  if (!questions.length) {
-    container.innerHTML = '<p style="text-align:center;padding:2rem;color:var(--text2)">暂无此分类的题目。</p>';
-    return;
-  }
-  if (index >= questions.length) {
-    const pct = Math.round(correct / questions.length * 100);
-    let grade = pct >= 90 ? '🌟 优秀！' : pct >= 70 ? '👍 良好！' : pct >= 50 ? '💪 继续加油' : '📖 需要更多学习';
-    container.innerHTML = `<div class="quiz-result fade-in">
-      <div class="score">${correct}/${questions.length}</div>
-      <div class="score-label">正确率 ${pct}% — ${grade}</div>
-      <button class="nav-btn" style="background:var(--primary);color:#fff;margin:1rem auto;width:auto;padding:.6rem 2rem;border-radius:8px" onclick="startQuiz()">再来一次</button>
-      ${pct < 70 ? '<p style="margin-top:1rem;font-size:.85rem;color:var(--text2)">提示: 多使用"服务浏览器"和"NRC参考"标签页学习。</p>' : ''}
-    </div>`;
-    return;
-  }
-
-  const q = questions[index];
-  const pct = (index / questions.length * 100);
-  container.innerHTML = `
-    <div class="quiz-card fade-in">
-      <div class="quiz-progress">
-        <div class="quiz-progress-bar"><div class="quiz-progress-fill" style="width:${pct}%"></div></div>
-        <div class="quiz-progress-text">第 ${index+1}/${questions.length} 题</div>
-      </div>
-      <div class="quiz-question">${q.q}</div>
-      <div class="quiz-options" id="quiz-options">
-        ${q.opts.map((opt, i) => `<button class="quiz-option" data-idx="${i}" onclick="answerQuiz(${i})">${String.fromCharCode(65+i)}. ${opt}</button>`).join('')}
-      </div>
-      <div id="quiz-explanation"></div>
-    </div>`;
-}
-
-function answerQuiz(idx) {
-  if (quizState.answered) return;
-  const q = quizState.questions[quizState.index];
-  quizState.answered = true;
-
-  const options = document.querySelectorAll('.quiz-option');
-  options.forEach((btn, i) => {
-    btn.disabled = true;
-    if (i === q.a) btn.classList.add('correct');
-    else if (i === idx && idx !== q.a) btn.classList.add('wrong');
-    if (i === idx) btn.classList.add('selected');
-  });
-
-  if (idx === q.a) quizState.correct++;
-
-  const needsNext = quizState.index < quizState.questions.length - 1;
-  document.getElementById('quiz-explanation').innerHTML = `
-    <div class="quiz-explanation">
-      <strong>${idx === q.a ? '✅ 正确!' : '❌ 错误'}</strong><br>
-      ${q.explain}
-    </div>
-    ${needsNext ? '<button class="nav-btn" style="background:var(--primary);color:#fff;margin-top:.8rem;width:auto;padding:.4rem 1.5rem;border-radius:6px" onclick="nextQuiz()">下一题 →</button>' : ''}
-    ${!needsNext ? '<button class="nav-btn" style="background:var(--primary);color:#fff;margin-top:.8rem;width:auto;padding:.4rem 1.5rem;border-radius:6px" onclick="nextQuiz()">查看结果 →</button>' : ''}`;
-}
-
-function nextQuiz() {
-  quizState.index++;
-  quizState.answered = false;
-  renderQuiz();
-}
 
 // Theme with localStorage persistence
 function toggleTheme() {
@@ -1356,7 +1225,6 @@ renderNRCs();
 renderHexMap();
 renderSessions();
 initBuilder();
-startQuiz();
 
 // ======================== CAN BUS CONTENT ========================
 
